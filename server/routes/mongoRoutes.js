@@ -4,6 +4,7 @@ import Course from '../models/Course.js';
 import Enrollment from '../models/Enrollment.js';
 import Test from '../models/Test.js';
 import jwt from 'jsonwebtoken';
+import authRoutes from './authRoutes.js';
 
 const router = express.Router();
 
@@ -1012,5 +1013,8 @@ router.put('/admin/users/:id/courses', verifyToken, requireAdmin, async (req, re
     res.status(500).json({ message: 'Failed to update user courses', error: error.message });
   }
 });
+
+// Use auth routes
+router.use('/auth', authRoutes);
 
 export default router;
