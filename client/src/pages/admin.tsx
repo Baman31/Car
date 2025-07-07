@@ -438,9 +438,7 @@ export default function Admin() {
                         <p className="text-3xl font-bold text-blue-900 dark:text-blue-100">
                           {adminStats?.totalCourses || 0}
                         </p>
-                        <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                          {adminStats?.activeCourses || 0} active courses
-                        </p>
+                        
                       </div>
                       <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
                         <BookOpen className="w-6 h-6 text-blue-600" />
