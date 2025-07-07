@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { Edit, Plus, Award, Users, BookOpen, RefreshCw, Activity } from "lucide-react";
@@ -17,125 +18,262 @@ interface GradeFormProps {
   onSuccess: () => void;
 }
 
+interface TestGradingCardProps {
+  test: any;
+  onGradeDialog: (student: any, test: any, existingResult?: any) => void;
+  getGradeColor: (grade: string) => string;
+}
+
 function GradeForm({ student, test, existingResult, onSuccess }: GradeFormProps) {
   const [score, setScore] = useState(existingResult?.score || "");
   const [grade, setGrade] = useState(existingResult?.grade || "");
-  const [maxScore, setMaxScore] = useState(existingResult?.maxScore || test.maxScore || 100);
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const addResultMutation = useMutation({
-    mutationFn: async () => {
-      const testId = test._id || test.testId;
-      const response = await fetch(`/api/mongo/tests/${testId}/results`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          studentId: student._id,
-          score: Number(score),
-          grade,
-          maxScore: Number(maxScore) || 100,
-        }),
-      });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to save grade");
-      }
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/mongo/tests"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/mongo/admin/course"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/mongo/admin/student-results"] });
-      toast({
-        title: "Success",
-        description: `Grade ${existingResult ? 'updated' : 'added'} for ${student.firstName} ${student.lastName}`,
-      });
-      onSuccess();
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to save grade",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!score || !grade) {
+    setLoading(true);
+
+    try {
+      const token = localStorage.getItem('token');
+      const url = existingResult 
+        ? `/api/mongo/tests/${test._id}/results/${existingResult._id}`
+        : `/api/mongo/tests/${test._id}/results`;
+      
+      const method = existingResult ? 'PUT' : 'POST';
+      
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          student: student._id,
+          score: parseInt(score),
+          grade: grade,
+          maxScore: test.maxScore || 100
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save grade');
+      }
+
+      // Invalidate and refetch relevant queries
+      await queryClient.invalidateQueries({ queryKey: ["/api/mongo/tests"] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/mongo/admin/student-results"] });
+      
+      toast({
+        title: existingResult ? "Grade Updated" : "Grade Added",
+        description: `${grade} grade saved for ${student.firstName} ${student.lastName}`,
+      });
+      
+      onSuccess();
+    } catch (error) {
       toast({
         title: "Error",
-        description: "Please enter both score and grade",
+        description: "Failed to save grade. Please try again.",
         variant: "destructive",
       });
-      return;
+    } finally {
+      setLoading(false);
     }
-    addResultMutation.mutate();
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium mb-1">
-          Score (out of {maxScore})
-        </label>
-        <Input
-          type="number"
-          value={score}
-          onChange={(e) => setScore(e.target.value)}
-          placeholder="Enter score"
-          min="0"
-          max={maxScore}
-        />
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="score">Score</Label>
+          <Input
+            id="score"
+            type="number"
+            placeholder="Enter score"
+            value={score}
+            onChange={(e) => setScore(e.target.value)}
+            min="0"
+            max={test.maxScore || 100}
+            required
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            Out of {test.maxScore || 100} points
+          </p>
+        </div>
+        <div>
+          <Label htmlFor="grade">Grade</Label>
+          <Select value={grade} onValueChange={setGrade} required>
+            <SelectTrigger>
+              <SelectValue placeholder="Select grade" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="A+">A+</SelectItem>
+              <SelectItem value="A">A</SelectItem>
+              <SelectItem value="B+">B+</SelectItem>
+              <SelectItem value="B">B</SelectItem>
+              <SelectItem value="C+">C+</SelectItem>
+              <SelectItem value="C">C</SelectItem>
+              <SelectItem value="D">D</SelectItem>
+              <SelectItem value="F">F</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
-      
-      <div>
-        <label className="block text-sm font-medium mb-1">
-          Max Score
-        </label>
-        <Input
-          type="number"
-          value={maxScore}
-          onChange={(e) => setMaxScore(e.target.value)}
-          placeholder="Enter max score"
-          min="1"
-        />
-      </div>
-      
-      <div>
-        <label className="block text-sm font-medium mb-1">Grade</label>
-        <Select value={grade} onValueChange={setGrade}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select grade" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="A+">A+</SelectItem>
-            <SelectItem value="A">A</SelectItem>
-            <SelectItem value="B+">B+</SelectItem>
-            <SelectItem value="B">B</SelectItem>
-            <SelectItem value="C+">C+</SelectItem>
-            <SelectItem value="C">C</SelectItem>
-            <SelectItem value="D">D</SelectItem>
-            <SelectItem value="F">F</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      
-
-      
-      <Button 
-        type="submit" 
-        className="w-full"
-        disabled={addResultMutation.isPending}
-      >
-        {addResultMutation.isPending 
-          ? (existingResult ? "Updating..." : "Adding...") 
-          : (existingResult ? "Update Grade" : "Add Grade")
-        }
+      <Button type="submit" disabled={loading} className="w-full">
+        {loading ? (
+          <>
+            <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+            Saving...
+          </>
+        ) : (
+          existingResult ? "Update Grade" : "Add Grade"
+        )}
       </Button>
     </form>
+  );
+}
+
+function TestGradingCard({ test, onGradeDialog, getGradeColor }: TestGradingCardProps) {
+  const { data: students, isLoading: studentsLoading } = useQuery<any[]>({
+    queryKey: ["/api/mongo/admin/course", test.course?._id, "students"],
+    queryFn: async () => {
+      if (!test.course?._id) return [];
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/mongo/admin/course/${test.course._id}/students`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!response.ok) throw new Error('Failed to fetch students');
+      return response.json();
+    },
+    enabled: !!test.course?._id,
+    refetchInterval: 5000,
+  });
+
+  if (studentsLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-6 w-48" />
+          <Skeleton className="h-4 w-64" />
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-32 w-full" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex justify-between items-center">
+          <div>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <BookOpen className="h-5 w-5" />
+              {test.title}
+            </CardTitle>
+            <p className="text-sm text-gray-600">
+              {test.course?.title} • Max Score: {test.maxScore || 100}
+            </p>
+            <div className="flex items-center space-x-2 mt-2">
+              <div className="flex items-center space-x-1 text-xs text-green-600">
+                <Activity className="w-3 h-3" />
+                <span>Live Data</span>
+              </div>
+            </div>
+          </div>
+          <Badge variant="outline">
+            {test.results?.length || 0} / {students?.length || 0} Completed
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b">
+                <th className="text-left py-2">Student</th>
+                <th className="text-left py-2">Email</th>
+                <th className="text-center py-2">Score</th>
+                <th className="text-center py-2">Grade</th>
+                <th className="text-center py-2">Date Completed</th>
+                <th className="text-center py-2">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {students?.map((student: any) => {
+                const result = test.results?.find((r: any) => 
+                  r.student.toString() === student._id.toString()
+                );
+                
+                return (
+                  <tr key={student._id} className="border-b">
+                    <td className="py-2 font-medium">
+                      {student.firstName} {student.lastName}
+                    </td>
+                    <td className="py-2 text-gray-600">{student.email}</td>
+                    <td className="py-2 text-center">
+                      {result ? (
+                        <span className="font-semibold">
+                          {result.score}/{result.maxScore || test.maxScore || 100}
+                        </span>
+                      ) : (
+                        <span className="text-gray-400">Not graded</span>
+                      )}
+                    </td>
+                    <td className="py-2 text-center">
+                      {result ? (
+                        <Badge className={getGradeColor(result.grade)}>
+                          {result.grade}
+                        </Badge>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
+                    </td>
+                    <td className="py-2 text-center text-gray-600">
+                      {result ? (
+                        new Date(result.completedAt).toLocaleDateString()
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
+                    </td>
+                    <td className="py-2 text-center">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onGradeDialog(student, test, result)}
+                      >
+                        {result ? (
+                          <>
+                            <Edit className="h-3 w-3 mr-1" />
+                            Edit
+                          </>
+                        ) : (
+                          <>
+                            <Plus className="h-3 w-3 mr-1" />
+                            Add Grade
+                          </>
+                        )}
+                      </Button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          
+          {(!students || students.length === 0) && (
+            <div className="text-center py-8 text-gray-500">
+              <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
+              <p>No students enrolled in this course</p>
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -147,57 +285,22 @@ export default function StudentGrades() {
   const [existingResult, setExistingResult] = useState<any>(null);
   const queryClient = useQueryClient();
 
-  // Real-time data fetching with auto-refresh
   const { data: tests, isLoading: testsLoading } = useQuery<any[]>({
     queryKey: ["/api/mongo/tests"],
-    refetchInterval: 5000, // Refresh every 5 seconds for real-time updates
-  });
-
-  // Get students for the selected test's course
-  const currentTest = tests?.find(test => test._id === selectedTest);
-  const { data: students, isLoading: studentsLoading } = useQuery<any[]>({
-    queryKey: selectedTest === "all" ? ["/api/mongo/users", "students"] : ["/api/mongo/admin/course", currentTest?.course?._id, "students"],
-    queryFn: async () => {
-      if (selectedTest === "all") {
-        // For "all" tests, fetch all students
-        const token = localStorage.getItem('token');
-        const response = await fetch(`/api/mongo/users`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        if (!response.ok) throw new Error('Failed to fetch students');
-        const data = await response.json();
-        return data.filter((user: any) => user.role === 'student');
-      } else {
-        // For specific test, fetch only students enrolled in that course
-        if (!currentTest?.course?._id) return [];
-        const token = localStorage.getItem('token');
-        const response = await fetch(`/api/mongo/admin/course/${currentTest.course._id}/students`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        if (!response.ok) throw new Error('Failed to fetch students');
-        return response.json();
-      }
-    },
-    enabled: selectedTest === "all" || !!currentTest?.course?._id,
-    refetchInterval: 5000, // Refresh every 5 seconds for real-time updates
+    refetchInterval: 5000,
   });
 
   const { data: studentResults, isLoading: resultsLoading } = useQuery<any[]>({
     queryKey: ["/api/mongo/admin/student-results"],
-    refetchInterval: 5000, // Refresh every 5 seconds for real-time updates
+    refetchInterval: 5000,
   });
 
-  // Auto-refresh test results data
+  // Auto-refresh data every 5 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       queryClient.invalidateQueries({ queryKey: ["/api/mongo/tests"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/mongo/admin/course"] });
       queryClient.invalidateQueries({ queryKey: ["/api/mongo/admin/student-results"] });
-    }, 5000); // Refresh every 5 seconds
+    }, 5000);
 
     return () => clearInterval(interval);
   }, [queryClient]);
@@ -223,7 +326,7 @@ export default function StudentGrades() {
     return colors[grade] || 'bg-gray-100 text-gray-800';
   };
 
-  if (testsLoading || studentsLoading) {
+  if (testsLoading) {
     return (
       <div className="space-y-6">
         <Skeleton className="h-8 w-64" />
@@ -248,47 +351,27 @@ export default function StudentGrades() {
         <div className="bg-gradient-to-r from-white/10 to-white/5 backdrop-blur-sm">
           <div className="p-8">
             <div className="flex flex-col lg:flex-row gap-6 justify-between items-start lg:items-center">
-              <div className="flex items-center space-x-6">
-                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center shadow-lg">
-                  <Award className="w-10 h-10 text-white" />
-                </div>
-                <div className="space-y-2">
-                  <h3 className="text-3xl font-bold text-gray-900 dark:text-white">
-                    Real-Time Test Results
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-300 text-lg">
-                    Live student performance tracking and grading system
-                  </p>
-                </div>
+              <div className="flex-1">
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                  Student Grade Management
+                </h1>
+                <p className="text-gray-600 dark:text-gray-300 mt-2">
+                  Manage and track student performance across all courses with real-time updates
+                </p>
               </div>
-              
-              {/* Real-time Stats */}
-              <div className="flex items-center space-x-4">
+              <div className="flex flex-wrap gap-3">
                 <div className="flex items-center space-x-2 bg-green-50 dark:bg-green-900/20 px-4 py-2 rounded-xl border border-green-200 dark:border-green-800">
-                  <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
                   <span className="text-green-800 dark:text-green-200 text-sm font-medium">Live Updates</span>
                 </div>
                 <div className="flex items-center space-x-2 bg-purple-50 dark:bg-purple-900/20 px-4 py-2 rounded-xl border border-purple-200 dark:border-purple-800">
                   <Users className="h-4 w-4 text-purple-600" />
-                  <span className="text-purple-800 dark:text-purple-200 text-sm font-medium">{students?.length || 0} Students</span>
+                  <span className="text-purple-800 dark:text-purple-200 text-sm font-medium">Course-Specific</span>
                 </div>
                 <div className="flex items-center space-x-2 bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-xl border border-blue-200 dark:border-blue-800">
                   <BookOpen className="h-4 w-4 text-blue-600" />
                   <span className="text-blue-800 dark:text-blue-200 text-sm font-medium">{tests?.length || 0} Tests</span>
                 </div>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => {
-                    queryClient.invalidateQueries({ queryKey: ["/api/mongo/tests"] });
-                    queryClient.invalidateQueries({ queryKey: ["/api/mongo/admin/course"] });
-                    queryClient.invalidateQueries({ queryKey: ["/api/mongo/admin/student-results"] });
-                  }}
-                  className="bg-white/80 hover:bg-white border-gray-200 hover:border-gray-300"
-                >
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Refresh
-                </Button>
               </div>
             </div>
           </div>
@@ -320,131 +403,37 @@ export default function StudentGrades() {
       {/* Tests with Students */}
       <div className="space-y-4">
         {filteredTests?.map((test) => (
-          <Card key={test._id}>
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <BookOpen className="h-5 w-5" />
-                    {test.title}
-                  </CardTitle>
-                  <p className="text-sm text-gray-600">
-                    {test.course?.title} • Max Score: {test.maxScore || 100}
-                  </p>
-                  <div className="flex items-center space-x-2 mt-2">
-                    <div className="flex items-center space-x-1 text-xs text-green-600">
-                      <Activity className="w-3 h-3" />
-                      <span>Live Data</span>
-                    </div>
-                  </div>
-                </div>
-                <Badge variant="outline">
-                  {test.results?.length || 0} / {students?.length || 0} Completed
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-2">Student</th>
-                      <th className="text-left py-2">Email</th>
-                      <th className="text-center py-2">Score</th>
-                      <th className="text-center py-2">Grade</th>
-                      <th className="text-center py-2">Date Completed</th>
-                      <th className="text-center py-2">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {students?.map((student: any) => {
-                      const result = test.results?.find((r: any) => 
-                        r.student.toString() === student._id.toString()
-                      );
-                      
-                      return (
-                        <tr key={student._id} className="border-b">
-                          <td className="py-2 font-medium">
-                            {student.firstName} {student.lastName}
-                          </td>
-                          <td className="py-2 text-gray-600">{student.email}</td>
-                          <td className="py-2 text-center">
-                            {result ? (
-                              <span className="font-semibold">
-                                {result.score}/{result.maxScore || test.maxScore || 100}
-                              </span>
-                            ) : (
-                              <span className="text-gray-400">Not graded</span>
-                            )}
-                          </td>
-                          <td className="py-2 text-center">
-                            {result ? (
-                              <Badge className={getGradeColor(result.grade)}>
-                                {result.grade}
-                              </Badge>
-                            ) : (
-                              <span className="text-gray-400">-</span>
-                            )}
-                          </td>
-                          <td className="py-2 text-center text-gray-600">
-                            {result ? (
-                              new Date(result.completedAt).toLocaleDateString()
-                            ) : (
-                              <span className="text-gray-400">-</span>
-                            )}
-                          </td>
-                          <td className="py-2 text-center">
-                            <Dialog open={gradeDialogOpen} onOpenChange={setGradeDialogOpen}>
-                              <DialogTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => openGradeDialog(student, test, result)}
-                                >
-                                  {result ? (
-                                    <>
-                                      <Edit className="h-3 w-3 mr-1" />
-                                      Edit
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Plus className="h-3 w-3 mr-1" />
-                                      Add Grade
-                                    </>
-                                  )}
-                                </Button>
-                              </DialogTrigger>
-                              <DialogContent className="max-w-md">
-                                <DialogHeader>
-                                  <DialogTitle className="flex items-center gap-2">
-                                    <Award className="h-5 w-5" />
-                                    {result ? 'Edit' : 'Add'} Grade
-                                  </DialogTitle>
-                                  <p className="text-sm text-gray-600">
-                                    {selectedStudent?.firstName} {selectedStudent?.lastName} - {selectedTestData?.title}
-                                  </p>
-                                </DialogHeader>
-                                {selectedStudent && selectedTestData && (
-                                  <GradeForm
-                                    student={selectedStudent}
-                                    test={selectedTestData}
-                                    existingResult={existingResult}
-                                    onSuccess={() => setGradeDialogOpen(false)}
-                                  />
-                                )}
-                              </DialogContent>
-                            </Dialog>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
+          <TestGradingCard
+            key={test._id}
+            test={test}
+            onGradeDialog={openGradeDialog}
+            getGradeColor={getGradeColor}
+          />
         ))}
       </div>
+
+      {/* Grade Dialog */}
+      <Dialog open={gradeDialogOpen} onOpenChange={setGradeDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>
+              {existingResult ? "Edit Grade" : "Add Grade"}
+            </DialogTitle>
+            <DialogDescription>
+              {existingResult ? "Update" : "Add"} grade for {selectedStudent?.firstName} {selectedStudent?.lastName} 
+              on {selectedTestData?.title}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedStudent && selectedTestData && (
+            <GradeForm
+              student={selectedStudent}
+              test={selectedTestData}
+              existingResult={existingResult}
+              onSuccess={() => setGradeDialogOpen(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
 
       {filteredTests?.length === 0 && (
         <Card>
