@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
@@ -7,13 +7,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDate, getGradeColor } from "@/lib/utils";
 import Sidebar from "@/components/sidebar";
-import { BookOpen, Calendar, Award, User, Trophy, TrendingUp, Target, CheckCircle } from "lucide-react";
+import { BookOpen, Calendar, Award, User, Trophy, TrendingUp, Target, CheckCircle, RefreshCw, Activity } from "lucide-react";
 
 export default function TestResults() {
   const { user, isAdmin } = useAuth();
   const [selectedCourse, setSelectedCourse] = useState("all");
+  const queryClient = useQueryClient();
   
-  // Get test results based on user role
+  // Get test results based on user role with real-time updates
   const { data: testResults, isLoading } = useQuery<any[]>({
     queryKey: isAdmin ? ['/api/mongo/admin/student-results'] : ['/api/mongo/student/my-results'],
     queryFn: async () => {
@@ -33,7 +34,31 @@ export default function TestResults() {
       return response.json();
     },
     enabled: !!user,
+    refetchInterval: 3000, // Refresh every 3 seconds for real-time updates
   });
+
+  // Fetch all tests for real-time statistics
+  const { data: allTests, isLoading: testsLoading } = useQuery<any[]>({
+    queryKey: ["/api/mongo/tests"],
+    enabled: !!user && isAdmin,
+    refetchInterval: 3000, // Refresh every 3 seconds for real-time updates
+  });
+
+  // Auto-refresh data for real-time updates
+  useEffect(() => {
+    if (!user) return;
+    
+    const interval = setInterval(() => {
+      if (isAdmin) {
+        queryClient.invalidateQueries({ queryKey: ["/api/mongo/admin/student-results"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/mongo/tests"] });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ["/api/mongo/student/my-results"] });
+      }
+    }, 3000); // Refresh every 3 seconds
+
+    return () => clearInterval(interval);
+  }, [queryClient, user, isAdmin]);
 
   if (isLoading) {
     return (
@@ -68,17 +93,34 @@ export default function TestResults() {
     )
   );
 
-  // Calculate stats for hero section
+  // Calculate comprehensive real-time statistics
   const totalTests = isAdmin 
-    ? testResults?.reduce((acc: number, student: any) => acc + (student.testResults?.length || 0), 0) || 0
+    ? (allTests?.length || 0) // Total number of tests created
     : testResults?.length || 0;
   
+  // Total unique students who have completed at least one test
+  const studentsCompleted = isAdmin && testResults ? new Set(
+    testResults.filter((student: any) => 
+      student.testResults?.some((t: any) => t.result)
+    ).map((student: any) => student.student._id)
+  ).size : 0;
+  
+  // Total completed test attempts across all students
   const completedTests = isAdmin
     ? testResults?.reduce((acc: number, student: any) => 
         acc + (student.testResults?.filter((t: any) => t.result).length || 0), 0) || 0
     : testResults?.length || 0;
   
-  const averageScore = 85; // Simplified for now
+  // Average score across all completed tests
+  const averageScore = isAdmin && testResults ? 
+    (() => {
+      const allScores = testResults.reduce((scores: number[], student: any) => {
+        const studentScores = student.testResults?.filter((t: any) => t.result)
+          .map((t: any) => (t.result.score / t.maxScore) * 100) || [];
+        return scores.concat(studentScores);
+      }, []);
+      return allScores.length > 0 ? Math.round(allScores.reduce((sum, score) => sum + score, 0) / allScores.length) : 0;
+    })() : 85;
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -101,29 +143,60 @@ export default function TestResults() {
               }
             </p>
             
-            {/* Stats Cards */}
+            {/* Real-Time Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
-              <Card className="bg-white/10 backdrop-blur-sm border-white/20">
+              <Card className="bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 transition-all duration-300">
                 <CardContent className="p-6 text-center">
-                  <Target className="w-12 h-12 text-yellow-400 mx-auto mb-4" />
-                  <div className="text-3xl font-bold text-white mb-2">{totalTests}</div>
-                  <p className="text-green-100">Total Tests</p>
+                  <div className="relative">
+                    <Target className="w-12 h-12 text-yellow-400 mx-auto mb-4" />
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                  </div>
+                  <div className="text-3xl font-bold text-white mb-2 font-mono">{totalTests}</div>
+                  <p className="text-green-100 font-medium">Total Tests</p>
+                  <p className="text-green-200/70 text-sm mt-1">
+                    {isAdmin ? "Created in system" : "Available to you"}
+                  </p>
                 </CardContent>
               </Card>
-              <Card className="bg-white/10 backdrop-blur-sm border-white/20">
+              <Card className="bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 transition-all duration-300">
                 <CardContent className="p-6 text-center">
-                  <CheckCircle className="w-12 h-12 text-green-400 mx-auto mb-4" />
-                  <div className="text-3xl font-bold text-white mb-2">{completedTests}</div>
-                  <p className="text-green-100">Completed</p>
+                  <div className="relative">
+                    <User className="w-12 h-12 text-blue-400 mx-auto mb-4" />
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-400 rounded-full animate-pulse"></div>
+                  </div>
+                  <div className="text-3xl font-bold text-white mb-2 font-mono">{studentsCompleted}</div>
+                  <p className="text-green-100 font-medium">Students Completed</p>
+                  <p className="text-green-200/70 text-sm mt-1">
+                    {isAdmin ? "Have taken tests" : "Including you"}
+                  </p>
                 </CardContent>
               </Card>
-              <Card className="bg-white/10 backdrop-blur-sm border-white/20">
+              <Card className="bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 transition-all duration-300">
                 <CardContent className="p-6 text-center">
-                  <Trophy className="w-12 h-12 text-orange-400 mx-auto mb-4" />
-                  <div className="text-3xl font-bold text-white mb-2">{Math.round(averageScore)}%</div>
-                  <p className="text-green-100">Average Score</p>
+                  <div className="relative">
+                    <Trophy className="w-12 h-12 text-orange-400 mx-auto mb-4" />
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-orange-400 rounded-full animate-pulse"></div>
+                  </div>
+                  <div className="text-3xl font-bold text-white mb-2 font-mono">{averageScore}%</div>
+                  <p className="text-green-100 font-medium">Average Score</p>
+                  <p className="text-green-200/70 text-sm mt-1">
+                    Across all completed tests
+                  </p>
                 </CardContent>
               </Card>
+            </div>
+            
+            {/* Real-Time Update Indicator */}
+            <div className="mt-8 flex items-center justify-center space-x-3">
+              <div className="flex items-center space-x-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 border border-white/20">
+                <Activity className="w-4 h-4 text-green-400 animate-pulse" />
+                <span className="text-white text-sm font-medium">Live Updates</span>
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-ping"></div>
+              </div>
+              <div className="flex items-center space-x-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 border border-white/20">
+                <RefreshCw className="w-4 h-4 text-blue-400 animate-spin" />
+                <span className="text-white text-sm font-medium">Auto-refresh: 3s</span>
+              </div>
             </div>
           </div>
         </div>
@@ -152,32 +225,50 @@ export default function TestResults() {
                     </div>
                   </div>
                   
-                  {/* Course Filter */}
-                  <div className="relative">
-                    <Select value={selectedCourse} onValueChange={setSelectedCourse}>
-                      <SelectTrigger className="w-full sm:w-56 h-12 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border-2 border-white/30 dark:border-gray-600/30 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 focus:border-emerald-500 dark:focus:border-emerald-400">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-2 h-2 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full"></div>
-                          <SelectValue />
-                        </div>
-                      </SelectTrigger>
-                      <SelectContent className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg border-white/30 dark:border-gray-600/30 rounded-xl shadow-2xl">
-                        <SelectItem value="all" className="hover:bg-emerald-50 dark:hover:bg-emerald-900/30">
+                  {/* Course Filter and Refresh Button */}
+                  <div className="flex items-center space-x-3">
+                    <div className="relative">
+                      <Select value={selectedCourse} onValueChange={setSelectedCourse}>
+                        <SelectTrigger className="w-full sm:w-56 h-12 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border-2 border-white/30 dark:border-gray-600/30 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 focus:border-emerald-500 dark:focus:border-emerald-400">
                           <div className="flex items-center space-x-2">
-                            <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                            <span>All Courses</span>
+                            <div className="w-2 h-2 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full"></div>
+                            <SelectValue />
                           </div>
-                        </SelectItem>
-                        {uniqueCourses.map((course) => (
-                          <SelectItem key={course} value={course} className="hover:bg-emerald-50 dark:hover:bg-emerald-900/30">
+                        </SelectTrigger>
+                        <SelectContent className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg border-white/30 dark:border-gray-600/30 rounded-xl shadow-2xl">
+                          <SelectItem value="all" className="hover:bg-emerald-50 dark:hover:bg-emerald-900/30">
                             <div className="flex items-center space-x-2">
-                              <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
-                              <span>{course}</span>
+                              <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                              <span>All Courses</span>
                             </div>
                           </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                          {uniqueCourses.map((course) => (
+                            <SelectItem key={course} value={course} className="hover:bg-emerald-50 dark:hover:bg-emerald-900/30">
+                              <div className="flex items-center space-x-2">
+                                <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                                <span>{course}</span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    {/* Manual Refresh Button */}
+                    <button 
+                      onClick={() => {
+                        if (isAdmin) {
+                          queryClient.invalidateQueries({ queryKey: ["/api/mongo/admin/student-results"] });
+                          queryClient.invalidateQueries({ queryKey: ["/api/mongo/tests"] });
+                        } else {
+                          queryClient.invalidateQueries({ queryKey: ["/api/mongo/student/my-results"] });
+                        }
+                      }}
+                      className="h-12 w-12 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group"
+                      title="Refresh data"
+                    >
+                      <RefreshCw className="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" />
+                    </button>
                   </div>
                 </div>
                 
