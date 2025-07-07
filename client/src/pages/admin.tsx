@@ -38,6 +38,7 @@ export default function Admin() {
   const [showCourseForm, setShowCourseForm] = useState(false);
   const [showTestForm, setShowTestForm] = useState(false);
   const [editingCourse, setEditingCourse] = useState<any>(null);
+  const [editingTest, setEditingTest] = useState<any>(null);
   const [activeTab, setActiveTab] = useState("analytics");
 
   const { data: adminStats, isLoading: statsLoading, refetch: refetchStats } = useQuery<{
@@ -75,6 +76,43 @@ export default function Admin() {
   const { data: pendingApprovals, isLoading: approvalsLoading } = useQuery<any[]>({
     queryKey: ["/api/mongo/admin/pending-approvals"],
   });
+
+  // Delete test mutation
+  const deleteTestMutation = useMutation({
+    mutationFn: async (testId: string) => {
+      const response = await apiRequest(`/api/mongo/tests/${testId}`, {
+        method: "DELETE",
+      });
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/mongo/tests"] });
+      toast({
+        title: "Success",
+        description: "Test deleted successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete test",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Handle test edit
+  const handleEditTest = (test: any) => {
+    setEditingTest(test);
+    setShowTestForm(true);
+  };
+
+  // Handle test delete
+  const handleDeleteTest = async (testId: string) => {
+    if (window.confirm("Are you sure you want to delete this test? This action cannot be undone.")) {
+      deleteTestMutation.mutate(testId);
+    }
+  };
 
   // Real-time analytics data refresh
   useEffect(() => {
@@ -1112,8 +1150,15 @@ export default function Admin() {
                       scrollbarColor: '#8b5cf6 #f3f4f6'
                     }}>
                       <TestForm 
-                        onSuccess={() => setShowTestForm(false)}
-                        onCancel={() => setShowTestForm(false)}
+                        editingTest={editingTest}
+                        onSuccess={() => {
+                          setShowTestForm(false);
+                          setEditingTest(null);
+                        }}
+                        onCancel={() => {
+                          setShowTestForm(false);
+                          setEditingTest(null);
+                        }}
                       />
                     </div>
                   </DialogContent>
@@ -1149,10 +1194,22 @@ export default function Admin() {
                             
                             {/* Action Buttons */}
                             <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-blue-50 dark:hover:bg-blue-900" title="Edit Test">
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="h-8 w-8 p-0 hover:bg-blue-50 dark:hover:bg-blue-900" 
+                                title="Edit Test"
+                                onClick={() => handleEditTest(test)}
+                              >
                                 <Edit className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                               </Button>
-                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-red-50 dark:hover:bg-red-900" title="Delete Test">
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="h-8 w-8 p-0 hover:bg-red-50 dark:hover:bg-red-900" 
+                                title="Delete Test"
+                                onClick={() => handleDeleteTest(test._id)}
+                              >
                                 <Trash2 className="h-4 w-4 text-red-600 dark:text-red-400" />
                               </Button>
                             </div>

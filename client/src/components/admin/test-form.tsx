@@ -23,11 +23,12 @@ const testSchema = z.object({
 type TestFormData = z.infer<typeof testSchema>;
 
 interface TestFormProps {
+  editingTest?: any;
   onSuccess?: () => void;
   onCancel?: () => void;
 }
 
-export default function TestForm({ onSuccess, onCancel }: TestFormProps) {
+export default function TestForm({ editingTest, onSuccess, onCancel }: TestFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -38,25 +39,28 @@ export default function TestForm({ onSuccess, onCancel }: TestFormProps) {
   const form = useForm<TestFormData>({
     resolver: zodResolver(testSchema),
     defaultValues: {
-      title: "",
-      description: "",
-      courseId: "",
-      timeLimit: 60,
-      passingScore: 60,
-      attempts: 3,
+      title: editingTest?.title || "",
+      description: editingTest?.description || "",
+      courseId: editingTest?.course?._id || "",
+      timeLimit: editingTest?.timeLimit || 60,
+      passingScore: editingTest?.passingScore || 60,
+      attempts: editingTest?.attempts || 3,
     },
   });
 
-  const createTestMutation = useMutation({
+  const testMutation = useMutation({
     mutationFn: async (data: TestFormData) => {
-      const response = await fetch("/api/mongo/tests", {
-        method: "POST",
+      const url = editingTest ? `/api/mongo/tests/${editingTest._id}` : "/api/mongo/tests";
+      const method = editingTest ? "PUT" : "POST";
+      
+      const response = await fetch(url, {
+        method,
         body: JSON.stringify(data),
         headers: { "Content-Type": "application/json" },
       });
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Failed to create test: ${errorText}`);
+        throw new Error(`Failed to ${editingTest ? 'update' : 'create'} test: ${errorText}`);
       }
       return response.json();
     },
@@ -64,7 +68,7 @@ export default function TestForm({ onSuccess, onCancel }: TestFormProps) {
       queryClient.invalidateQueries({ queryKey: ["/api/mongo/tests"] });
       toast({
         title: "Success",
-        description: "Test created successfully",
+        description: editingTest ? "Test updated successfully" : "Test created successfully",
       });
       form.reset();
       onSuccess?.();
@@ -72,14 +76,14 @@ export default function TestForm({ onSuccess, onCancel }: TestFormProps) {
     onError: (error) => {
       toast({
         title: "Error",
-        description: "Failed to create test",
+        description: `Failed to ${editingTest ? 'update' : 'create'} test`,
         variant: "destructive",
       });
     },
   });
 
   const onSubmit = (data: TestFormData) => {
-    createTestMutation.mutate(data);
+    testMutation.mutate(data);
   };
 
   return (
@@ -93,8 +97,12 @@ export default function TestForm({ onSuccess, onCancel }: TestFormProps) {
               <span className="text-3xl">📝</span>
             </div>
             <div>
-              <h2 className="text-3xl font-bold text-white">Create New Test</h2>
-              <p className="text-white/80 mt-1">Design engaging assessments for your students</p>
+              <h2 className="text-3xl font-bold text-white">
+                {editingTest ? "Edit Test" : "Create New Test"}
+              </h2>
+              <p className="text-white/80 mt-1">
+                {editingTest ? "Update your test settings and content" : "Design engaging assessments for your students"}
+              </p>
             </div>
           </div>
           <div className="space-x-3">
@@ -107,18 +115,18 @@ export default function TestForm({ onSuccess, onCancel }: TestFormProps) {
             </Button>
             <Button 
               onClick={form.handleSubmit(onSubmit)}
-              disabled={createTestMutation.isPending}
+              disabled={testMutation.isPending}
               className="bg-white text-blue-600 hover:bg-white/90 font-semibold shadow-lg"
             >
-              {createTestMutation.isPending ? (
+              {testMutation.isPending ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-                  Creating...
+                  {editingTest ? "Updating..." : "Creating..."}
                 </>
               ) : (
                 <>
-                  <span className="mr-2">✨</span>
-                  Create Test
+                  <span className="mr-2">{editingTest ? "💾" : "✨"}</span>
+                  {editingTest ? "Update Test" : "Create Test"}
                 </>
               )}
             </Button>

@@ -652,6 +652,58 @@ router.post('/tests', requireAdmin, async (req, res) => {
   }
 });
 
+// Admin: Update test
+router.put('/tests/:id', requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      title,
+      description,
+      courseId,
+      questions,
+      timeLimit,
+      passingScore,
+      attempts
+    } = req.body;
+
+    const test = await Test.findByIdAndUpdate(id, {
+      title,
+      description,
+      course: courseId,
+      questions: questions || [],
+      timeLimit: timeLimit || 60,
+      passingScore: passingScore || 60,
+      attempts: attempts || 3,
+      maxScore: 100
+    }, { new: true }).populate('course', 'title category');
+
+    if (!test) {
+      return res.status(404).json({ message: 'Test not found' });
+    }
+
+    res.json(test);
+  } catch (error) {
+    res.status(400).json({ message: 'Failed to update test', error: error.message });
+  }
+});
+
+// Admin: Delete test
+router.delete('/tests/:id', requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const test = await Test.findByIdAndDelete(id);
+    
+    if (!test) {
+      return res.status(404).json({ message: 'Test not found' });
+    }
+    
+    res.json({ message: 'Test deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to delete test', error: error.message });
+  }
+});
+
 // Admin: Add/Update test result for a student
 router.post('/tests/:testId/results', async (req, res) => {
   try {
