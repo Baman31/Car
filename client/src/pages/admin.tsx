@@ -1195,13 +1195,17 @@ export default function Admin() {
                             </div>
                             
                             {/* Action Buttons */}
-                            <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10 relative">
                               <Button 
                                 variant="ghost" 
                                 size="sm" 
                                 className="h-8 w-8 p-0 hover:bg-blue-50 dark:hover:bg-blue-900" 
                                 title="Edit Test"
-                                onClick={() => handleEditTest(test)}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleEditTest(test);
+                                }}
                               >
                                 <Edit className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                               </Button>
@@ -1210,7 +1214,11 @@ export default function Admin() {
                                 size="sm" 
                                 className="h-8 w-8 p-0 hover:bg-red-50 dark:hover:bg-red-900" 
                                 title="Delete Test"
-                                onClick={() => handleDeleteTest(test._id)}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleDeleteTest(test._id);
+                                }}
                               >
                                 <Trash2 className="h-4 w-4 text-red-600 dark:text-red-400" />
                               </Button>
@@ -1263,7 +1271,7 @@ export default function Admin() {
                           </div>
 
                           {/* Hover Overlay */}
-                          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 to-purple-500/0 group-hover:from-blue-500/5 group-hover:to-purple-500/5 rounded-xl transition-all duration-300"></div>
+                          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 to-purple-500/0 group-hover:from-blue-500/5 group-hover:to-purple-500/5 rounded-xl transition-all duration-300 pointer-events-none"></div>
                         </div>
                       ))}
                     </div>

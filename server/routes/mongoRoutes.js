@@ -629,7 +629,8 @@ router.post('/tests', verifyToken, requireAdmin, async (req, res) => {
       questions,
       timeLimit,
       passingScore,
-      attempts
+      attempts,
+      maxScore
     } = req.body;
 
     const test = new Test({
@@ -640,7 +641,7 @@ router.post('/tests', verifyToken, requireAdmin, async (req, res) => {
       timeLimit: timeLimit || 60,
       passingScore: passingScore || 60,
       attempts: attempts || 3,
-      maxScore: 100 // Set default max score to 100
+      maxScore: maxScore || 100
     });
 
     await test.save();
@@ -663,7 +664,8 @@ router.put('/tests/:id', verifyToken, requireAdmin, async (req, res) => {
       questions,
       timeLimit,
       passingScore,
-      attempts
+      attempts,
+      maxScore
     } = req.body;
 
     const test = await Test.findByIdAndUpdate(id, {
@@ -674,7 +676,7 @@ router.put('/tests/:id', verifyToken, requireAdmin, async (req, res) => {
       timeLimit: timeLimit || 60,
       passingScore: passingScore || 60,
       attempts: attempts || 3,
-      maxScore: 100
+      maxScore: maxScore || 100
     }, { new: true }).populate('course', 'title category');
 
     if (!test) {

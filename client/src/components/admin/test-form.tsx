@@ -19,6 +19,7 @@ const testSchema = z.object({
   timeLimit: z.number().min(1, "Time limit must be at least 1 minute"),
   passingScore: z.number().min(0).max(100, "Passing score must be between 0-100"),
   attempts: z.number().min(1, "Must allow at least 1 attempt"),
+  maxScore: z.number().min(1, "Max score must be at least 1"),
 });
 
 type TestFormData = z.infer<typeof testSchema>;
@@ -46,6 +47,7 @@ export default function TestForm({ editingTest, onSuccess, onCancel }: TestFormP
       timeLimit: editingTest?.timeLimit || 60,
       passingScore: editingTest?.passingScore || 60,
       attempts: editingTest?.attempts || 3,
+      maxScore: editingTest?.maxScore || 100,
     },
   });
 
@@ -299,6 +301,37 @@ export default function TestForm({ editingTest, onSuccess, onCancel }: TestFormP
                           />
                           <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 font-medium">
                             %
+                          </div>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Max Score */}
+                <FormField
+                  control={form.control}
+                  name="maxScore"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-lg font-semibold text-gray-700 dark:text-gray-200 flex items-center space-x-2">
+                        <div className="w-8 h-8 bg-gradient-to-br from-yellow-100 to-orange-200 dark:from-yellow-900 dark:to-orange-800 rounded-lg flex items-center justify-center">
+                          <span className="text-yellow-600 dark:text-yellow-400">🏆</span>
+                        </div>
+                        <span>Max Score</span>
+                      </FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Input 
+                            type="number" 
+                            placeholder="100" 
+                            {...field}
+                            onChange={(e) => field.onChange(Number(e.target.value))}
+                            className="h-12 text-lg border-2 border-gray-200 dark:border-gray-700 focus:border-yellow-500 rounded-xl bg-white dark:bg-gray-800 shadow-sm pl-4 pr-16"
+                          />
+                          <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 font-medium">
+                            points
                           </div>
                         </div>
                       </FormControl>
