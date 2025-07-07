@@ -54,7 +54,8 @@ export default function Admin() {
     activeCourses: number;
   }>({
     queryKey: ["/api/mongo/admin/stats"],
-    refetchInterval: 30000, // Refresh every 30 seconds for real-time data
+    refetchInterval: 3000, // Refresh every 3 seconds for real-time data
+    refetchIntervalInBackground: true,
   });
 
   const { data: courses, isLoading: coursesLoading } = useQuery<any[]>({
@@ -71,6 +72,8 @@ export default function Admin() {
 
   const { data: studentResults, isLoading: resultsLoading } = useQuery<any[]>({
     queryKey: ["/api/mongo/admin/student-results"],
+    refetchInterval: 3000, // Refresh every 3 seconds for real-time data
+    refetchIntervalInBackground: true,
   });
 
   const { data: pendingApprovals, isLoading: approvalsLoading } = useQuery<any[]>({
@@ -254,15 +257,24 @@ export default function Admin() {
               
               {/* Admin stats mini cards */}
               <div className="hidden lg:flex space-x-4">
-                <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 text-center min-w-[120px] border border-white/30">
+                <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 text-center min-w-[120px] border border-white/30 relative">
+                  <div className="absolute top-2 right-2">
+                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                  </div>
                   <div className="text-2xl font-bold text-white">{adminStats?.totalCourses || 0}</div>
                   <div className="text-blue-100 text-sm font-medium">Total Courses</div>
                 </div>
-                <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 text-center min-w-[120px] border border-white/30">
+                <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 text-center min-w-[120px] border border-white/30 relative">
+                  <div className="absolute top-2 right-2">
+                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                  </div>
                   <div className="text-2xl font-bold text-white">{adminStats?.studentsEnrolled || 0}</div>
                   <div className="text-blue-100 text-sm font-medium">Enrollments</div>
                 </div>
-                <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 text-center min-w-[120px] border border-white/30">
+                <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 text-center min-w-[120px] border border-white/30 relative">
+                  <div className="absolute top-2 right-2">
+                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                  </div>
                   <div className="text-2xl font-bold text-white">{adminStats?.averageScore || 0}%</div>
                   <div className="text-blue-100 text-sm font-medium">Avg Score</div>
                 </div>
@@ -395,11 +407,18 @@ export default function Admin() {
                             queryClient.invalidateQueries({ queryKey: ["/api/mongo/admin/stats"] });
                             queryClient.invalidateQueries({ queryKey: ["/api/mongo/admin/student-results"] });
                             queryClient.invalidateQueries({ queryKey: ["/api/mongo/admin/users"] });
+                            queryClient.invalidateQueries({ queryKey: ["/api/mongo/courses"] });
+                            queryClient.invalidateQueries({ queryKey: ["/api/mongo/tests"] });
+                            queryClient.invalidateQueries({ queryKey: ["/api/mongo/admin/pending-approvals"] });
+                            toast({
+                              title: "Data Refreshed",
+                              description: "All analytics data has been updated",
+                            });
                           }}
                           className="bg-white/80 hover:bg-white border-gray-200 hover:border-gray-300"
                         >
                           <RefreshCw className="w-4 h-4 mr-2" />
-                          Refresh
+                          Refresh Now
                         </Button>
                       </div>
                     </div>
