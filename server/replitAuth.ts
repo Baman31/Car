@@ -85,17 +85,20 @@ export async function setupAuth(app: Express) {
 
   // Setup Google OAuth strategy
   if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
-    passport.use(new GoogleStrategy({
+    console.log('Setting up Google OAuth strategy...');
+    passport.use('google', new GoogleStrategy({
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       callbackURL: "/api/auth/google/callback"
     }, async (accessToken, refreshToken, profile, done) => {
       try {
+        console.log('Google OAuth callback called for user:', profile.emails?.[0]?.value);
         // Check if user exists in database
         let user = await User.findOne({ email: profile.emails?.[0]?.value });
         
         if (!user) {
           // Create new user with Google profile data
+          console.log('Creating new user from Google profile');
           user = new User({
             email: profile.emails?.[0]?.value,
             firstName: profile.name?.givenName || '',
@@ -110,6 +113,7 @@ export async function setupAuth(app: Express) {
           await user.save();
         } else {
           // Update existing user with Google data if not set
+          console.log('Updating existing user with Google data');
           if (!user.googleId) {
             user.googleId = profile.id;
             user.emailVerified = true;
@@ -123,6 +127,8 @@ export async function setupAuth(app: Express) {
         return done(error, null);
       }
     }));
+  } else {
+    console.log('Google OAuth credentials not found - Google authentication disabled');
   }
 
   // Setup Replit OAuth only if properly configured
@@ -191,6 +197,7 @@ export async function setupAuth(app: Express) {
   
   app.get("/api/auth/google/callback", passport.authenticate("google", { failureRedirect: "/auth" }), (req, res) => {
     // Successful authentication, redirect to dashboard
+    console.log('Google OAuth successful, redirecting to dashboard');
     res.redirect("/");
   });
 
