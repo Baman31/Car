@@ -161,8 +161,30 @@ export async function setupAuth(app: Express) {
     }
   }
 
-  passport.serializeUser((user: Express.User, cb) => cb(null, user));
-  passport.deserializeUser((user: Express.User, cb) => cb(null, user));
+  passport.serializeUser((user: any, cb) => {
+    if (user._id) {
+      // MongoDB user
+      cb(null, { type: 'mongo', id: user._id.toString() });
+    } else {
+      // Session user (Replit OAuth)
+      cb(null, { type: 'session', data: user });
+    }
+  });
+  
+  passport.deserializeUser(async (obj: any, cb) => {
+    try {
+      if (obj.type === 'mongo') {
+        // Find MongoDB user
+        const user = await User.findById(obj.id);
+        cb(null, user);
+      } else {
+        // Session user
+        cb(null, obj.data);
+      }
+    } catch (error) {
+      cb(error, null);
+    }
+  });
 
   // Google OAuth routes
   app.get("/api/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
