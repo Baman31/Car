@@ -858,16 +858,31 @@ router.get('/admin/course/:courseId/students', verifyToken, requireAdmin, async 
   try {
     const { courseId } = req.params;
     
-    // Find all enrollments for this course
+    // Find students enrolled through both methods:
+    // 1. Traditional enrollment records
     const enrollments = await Enrollment.find({ course: courseId })
       .populate('student', 'firstName lastName email _id role')
       .select('student');
     
-    // Extract students from enrollments
-    const students = enrollments.map(enrollment => enrollment.student)
+    // 2. Users with this course in their enrolledCourses array (from approval system)
+    const usersWithCourse = await User.find({ 
+      enrolledCourses: courseId,
+      role: 'student',
+      isApproved: true
+    }).select('firstName lastName email _id role');
+    
+    // Combine and deduplicate students
+    const enrollmentStudents = enrollments.map(enrollment => enrollment.student)
       .filter(student => student && student.role === 'student');
     
-    res.json(students);
+    const allStudents = [...enrollmentStudents, ...usersWithCourse];
+    
+    // Remove duplicates based on _id
+    const uniqueStudents = allStudents.filter((student, index, self) => 
+      index === self.findIndex(s => s._id.toString() === student._id.toString())
+    );
+    
+    res.json(uniqueStudents);
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch course students', error: error.message });
   }
