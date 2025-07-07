@@ -336,7 +336,7 @@ router.get('/courses/:id', verifyToken, async (req, res) => {
 });
 
 // Admin: Create course with modules and notes
-router.post('/courses', requireAdmin, async (req, res) => {
+router.post('/courses', verifyToken, requireAdmin, async (req, res) => {
   try {
     const {
       title,
@@ -374,7 +374,7 @@ router.post('/courses', requireAdmin, async (req, res) => {
 });
 
 // Admin: Update course
-router.put('/courses/:id', requireAdmin, async (req, res) => {
+router.put('/courses/:id', verifyToken, requireAdmin, async (req, res) => {
   try {
     const course = await Course.findByIdAndUpdate(
       req.params.id,

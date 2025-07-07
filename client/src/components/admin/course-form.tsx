@@ -94,16 +94,7 @@ export default function CourseForm({ course, onSuccess, onCancel }: CourseFormPr
       const url = course ? `/api/mongo/courses/${course._id || course.id}` : '/api/mongo/courses';
       const method = course ? 'PUT' : 'POST';
 
-      const response = await fetch(url, {
-        method,
-        body: JSON.stringify(data),
-        headers: { 'Content-Type': 'application/json' },
-      });
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Course operation failed:", errorText);
-        throw new Error(`Failed to ${course ? 'update' : 'create'} course: ${errorText}`);
-      }
+      const response = await apiRequest(method, url, data);
       return response.json();
     },
     onSuccess: () => {
