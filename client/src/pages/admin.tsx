@@ -527,25 +527,39 @@ export default function Admin() {
                     <div className="space-y-6">
                       {/* User Statistics */}
                       <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-4 rounded-xl">
+                        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-4 rounded-xl relative">
+                          <div className="absolute top-2 right-2">
+                            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                          </div>
                           <div className="flex items-center space-x-3">
                             <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
                               <Users className="w-5 h-5 text-white" />
                             </div>
                             <div>
-                              <p className="text-sm text-gray-600 dark:text-gray-400">Active Users</p>
-                              <p className="text-xl font-bold text-gray-900 dark:text-white">{analyticsData.totalActiveUsers}</p>
+                              <div className="flex items-center space-x-1">
+                                <p className="text-sm text-gray-600 dark:text-gray-400">Active Users</p>
+                                <div className="w-1 h-1 bg-blue-500 rounded-full animate-pulse" />
+                              </div>
+                              <p className="text-xl font-bold text-gray-900 dark:text-white">{adminStats?.totalStudents || analyticsData.totalActiveUsers}</p>
+                              <p className="text-xs text-blue-600 dark:text-blue-400">Live count</p>
                             </div>
                           </div>
                         </div>
-                        <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 p-4 rounded-xl">
+                        <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 p-4 rounded-xl relative">
+                          <div className="absolute top-2 right-2">
+                            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                          </div>
                           <div className="flex items-center space-x-3">
                             <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
                               <TrendingUp className="w-5 h-5 text-white" />
                             </div>
                             <div>
-                              <p className="text-sm text-gray-600 dark:text-gray-400">New This Week</p>
+                              <div className="flex items-center space-x-1">
+                                <p className="text-sm text-gray-600 dark:text-gray-400">New This Week</p>
+                                <div className="w-1 h-1 bg-green-500 rounded-full animate-pulse" />
+                              </div>
                               <p className="text-xl font-bold text-gray-900 dark:text-white">{analyticsData.recentActivity.newUsers}</p>
+                              <p className="text-xs text-green-600 dark:text-green-400">Weekly growth</p>
                             </div>
                           </div>
                         </div>
@@ -556,15 +570,26 @@ export default function Admin() {
                         <h4 className="font-semibold text-gray-900 dark:text-white flex items-center space-x-2">
                           <PieChart className="w-4 h-4" />
                           <span>Course Distribution</span>
+                          <div className="w-1 h-1 bg-blue-500 rounded-full animate-pulse" />
                         </h4>
-                        <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl">
+                        <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl relative">
+                          <div className="absolute top-2 right-2">
+                            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                          </div>
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-gray-600 dark:text-gray-400">Total Categories</span>
                             <span className="font-bold text-gray-900 dark:text-white">{analyticsData.courseCategories}</span>
                           </div>
                           <div className="flex items-center justify-between mt-2">
                             <span className="text-sm text-gray-600 dark:text-gray-400">Active Courses</span>
-                            <span className="font-bold text-gray-900 dark:text-white">{analyticsData.activeCourses}</span>
+                            <span className="font-bold text-gray-900 dark:text-white">{adminStats?.totalCourses || analyticsData.activeCourses}</span>
+                          </div>
+                          <div className="flex items-center justify-between mt-2">
+                            <span className="text-xs text-gray-500 dark:text-gray-500">Live Updates</span>
+                            <div className="flex items-center space-x-1">
+                              <div className="w-1 h-1 bg-green-500 rounded-full animate-pulse" />
+                              <span className="text-xs text-green-600 dark:text-green-400">Active</span>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -593,25 +618,39 @@ export default function Admin() {
                     <div className="space-y-6">
                       {/* Test Performance */}
                       <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 p-4 rounded-xl">
+                        <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 p-4 rounded-xl relative">
+                          <div className="absolute top-2 right-2">
+                            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                          </div>
                           <div className="flex items-center space-x-3">
                             <div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center">
                               <Award className="w-5 h-5 text-white" />
                             </div>
                             <div>
-                              <p className="text-sm text-gray-600 dark:text-gray-400">Total Tests</p>
-                              <p className="text-xl font-bold text-gray-900 dark:text-white">{analyticsData.totalTestResults}</p>
+                              <div className="flex items-center space-x-1">
+                                <p className="text-sm text-gray-600 dark:text-gray-400">Total Tests</p>
+                                <div className="w-1 h-1 bg-purple-500 rounded-full animate-pulse" />
+                              </div>
+                              <p className="text-xl font-bold text-gray-900 dark:text-white">{adminStats?.testsCompleted || analyticsData.totalTestResults}</p>
+                              <p className="text-xs text-purple-600 dark:text-purple-400">Live data</p>
                             </div>
                           </div>
                         </div>
-                        <div className="bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 p-4 rounded-xl">
+                        <div className="bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 p-4 rounded-xl relative">
+                          <div className="absolute top-2 right-2">
+                            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                          </div>
                           <div className="flex items-center space-x-3">
                             <div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center">
                               <BarChart3 className="w-5 h-5 text-white" />
                             </div>
                             <div>
-                              <p className="text-sm text-gray-600 dark:text-gray-400">Avg Score</p>
-                              <p className="text-xl font-bold text-gray-900 dark:text-white">{analyticsData.averageTestScore}%</p>
+                              <div className="flex items-center space-x-1">
+                                <p className="text-sm text-gray-600 dark:text-gray-400">Avg Score</p>
+                                <div className="w-1 h-1 bg-orange-500 rounded-full animate-pulse" />
+                              </div>
+                              <p className="text-xl font-bold text-gray-900 dark:text-white">{adminStats?.averageScore || analyticsData.averageTestScore}%</p>
+                              <p className="text-xs text-orange-600 dark:text-orange-400">Real-time avg</p>
                             </div>
                           </div>
                         </div>
