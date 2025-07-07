@@ -929,6 +929,10 @@ router.get('/admin/stats', async (req, res) => {
     
     const totalEnrollments = enrollments.length;
     
+    // Calculate unique students enrolled (distinct student IDs in enrollments)
+    const uniqueStudentIds = new Set(enrollments.map(e => e.student._id.toString()));
+    const uniqueStudentsEnrolled = uniqueStudentIds.size;
+    
     // Calculate average completion rate
     let totalProgress = 0;
     let enrollmentCount = 0;
@@ -966,6 +970,7 @@ router.get('/admin/stats', async (req, res) => {
       totalCourses,
       totalStudents: totalStudents,
       studentsEnrolled: totalEnrollments,
+      uniqueStudentsEnrolled: uniqueStudentsEnrolled,
       averageScore,
       averageCompletion,
       courseCompletionRate,
