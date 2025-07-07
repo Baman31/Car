@@ -177,12 +177,7 @@ export default function Admin() {
   // Delete course mutation
   const deleteCourse = useMutation({
     mutationFn: async (courseId: string) => {
-      const response = await fetch(`/api/mongo/courses/${courseId}`, {
-        method: "DELETE",
-      });
-      if (!response.ok) {
-        throw new Error('Failed to delete course');
-      }
+      const response = await apiRequest("DELETE", `/api/mongo/courses/${courseId}`);
       return response.json();
     },
     onSuccess: () => {

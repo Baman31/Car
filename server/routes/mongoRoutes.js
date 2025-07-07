@@ -393,7 +393,7 @@ router.put('/courses/:id', requireAdmin, async (req, res) => {
 });
 
 // Admin: Delete course
-router.delete('/courses/:id', requireAdmin, async (req, res) => {
+router.delete('/courses/:id', verifyToken, requireAdmin, async (req, res) => {
   try {
     const course = await Course.findByIdAndUpdate(
       req.params.id,
