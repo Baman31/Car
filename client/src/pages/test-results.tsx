@@ -93,28 +93,47 @@ export default function TestResults() {
     )
   );
 
-  // Calculate comprehensive real-time statistics
+  // Filter data based on selected course for real-time course-specific analytics
+  const filteredTestResults = testResults?.map((student: any) => {
+    if (selectedCourse === "all") return student;
+    
+    return {
+      ...student,
+      testResults: student.testResults?.filter((test: any) => 
+        test.course?.title === selectedCourse
+      ) || []
+    };
+  }).filter((student: any) => 
+    selectedCourse === "all" || student.testResults?.length > 0
+  );
+
+  // Calculate comprehensive real-time statistics based on selected course
   const totalTests = isAdmin 
-    ? (allTests?.length || 0) // Total number of tests created
+    ? selectedCourse === "all" 
+      ? (allTests?.length || 0)
+      : (allTests?.filter((test: any) => 
+          testResults?.some((student: any) => 
+            student.testResults?.some((t: any) => 
+              t.course?.title === selectedCourse && t.testId === test._id
+            )
+          )
+        ).length || 0)
     : testResults?.length || 0;
   
-  // Total unique students who have completed at least one test
-  const studentsCompleted = isAdmin && testResults ? new Set(
-    testResults.filter((student: any) => 
+  // Total unique students who have completed at least one test in selected course
+  const studentsCompleted = isAdmin && filteredTestResults ? new Set(
+    filteredTestResults.filter((student: any) => 
       student.testResults?.some((t: any) => t.result)
     ).map((student: any) => student.student._id)
   ).size : 0;
   
-  // Total completed test attempts across all students
-  const completedTests = isAdmin
-    ? testResults?.reduce((acc: number, student: any) => 
-        acc + (student.testResults?.filter((t: any) => t.result).length || 0), 0) || 0
-    : testResults?.length || 0;
+  // Total students enrolled in the selected course (or all courses)
+  const totalStudentsInCourse = isAdmin && filteredTestResults ? filteredTestResults.length : 0;
   
-  // Average score across all completed tests
-  const averageScore = isAdmin && testResults ? 
+  // Average score across all completed tests in selected course
+  const averageScore = isAdmin && filteredTestResults ? 
     (() => {
-      const allScores = testResults.reduce((scores: number[], student: any) => {
+      const allScores = filteredTestResults.reduce((scores: number[], student: any) => {
         const studentScores = student.testResults?.filter((t: any) => t.result)
           .map((t: any) => (t.result.score / t.maxScore) * 100) || [];
         return scores.concat(studentScores);
@@ -272,49 +291,71 @@ export default function TestResults() {
                   </div>
                 </div>
                 
-                {/* Quick Stats Display */}
+                {/* Real-Time Course-Specific Stats Display */}
                 {isAdmin && testResults && (
                   <div className="mt-6 pt-6 border-t border-white/20 dark:border-gray-600/20">
+                    <div className="mb-4 flex items-center justify-between">
+                      <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
+                        {selectedCourse === "all" ? "Overall Statistics" : `${selectedCourse} Course Analytics`}
+                      </h3>
+                      <div className="flex items-center space-x-2 bg-white/20 dark:bg-gray-800/20 rounded-full px-3 py-1">
+                        <Activity className="w-3 h-3 text-green-400 animate-pulse" />
+                        <span className="text-xs text-gray-700 dark:text-gray-300 font-medium">Live Data</span>
+                      </div>
+                    </div>
+                    
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-4 border border-blue-100 dark:border-blue-800">
+                      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-4 border border-blue-100 dark:border-blue-800 hover:scale-105 transition-transform duration-200">
                         <div className="flex items-center space-x-3">
-                          <div className="p-2 bg-blue-500 rounded-lg">
+                          <div className="p-2 bg-blue-500 rounded-lg relative">
                             <User className="h-4 w-4 text-white" />
+                            <div className="absolute -top-1 -right-1 w-2 h-2 bg-blue-400 rounded-full animate-ping"></div>
                           </div>
                           <div>
-                            <p className="text-xs text-blue-600 dark:text-blue-400 font-medium uppercase tracking-wider">Total Students</p>
-                            <p className="text-lg font-bold text-blue-900 dark:text-blue-100">
-                              {testResults.length}
+                            <p className="text-xs text-blue-600 dark:text-blue-400 font-medium uppercase tracking-wider">
+                              {selectedCourse === "all" ? "Total Students" : "Students in Course"}
+                            </p>
+                            <p className="text-lg font-bold text-blue-900 dark:text-blue-100 font-mono">
+                              {totalStudentsInCourse}
+                            </p>
+                            <p className="text-xs text-blue-500 dark:text-blue-300 mt-1">
+                              {selectedCourse === "all" ? "Across all courses" : "Enrolled & active"}
                             </p>
                           </div>
                         </div>
                       </div>
                       
-                      <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-4 border border-green-100 dark:border-green-800">
+                      <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-4 border border-green-100 dark:border-green-800 hover:scale-105 transition-transform duration-200">
                         <div className="flex items-center space-x-3">
-                          <div className="p-2 bg-green-500 rounded-lg">
+                          <div className="p-2 bg-green-500 rounded-lg relative">
                             <Award className="h-4 w-4 text-white" />
+                            <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-400 rounded-full animate-ping"></div>
                           </div>
                           <div>
-                            <p className="text-xs text-green-600 dark:text-green-400 font-medium uppercase tracking-wider">Completed Tests</p>
-                            <p className="text-lg font-bold text-green-900 dark:text-green-100">
-                              {testResults.reduce((total: number, student: any) => 
-                                total + (student.testResults?.filter((t: any) => t.result).length || 0), 0
-                              )}
+                            <p className="text-xs text-green-600 dark:text-green-400 font-medium uppercase tracking-wider">Students Completed</p>
+                            <p className="text-lg font-bold text-green-900 dark:text-green-100 font-mono">
+                              {studentsCompleted}
+                            </p>
+                            <p className="text-xs text-green-500 dark:text-green-300 mt-1">
+                              {totalStudentsInCourse > 0 ? `${Math.round((studentsCompleted / totalStudentsInCourse) * 100)}% completion rate` : "No students yet"}
                             </p>
                           </div>
                         </div>
                       </div>
                       
-                      <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl p-4 border border-purple-100 dark:border-purple-800">
+                      <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl p-4 border border-purple-100 dark:border-purple-800 hover:scale-105 transition-transform duration-200">
                         <div className="flex items-center space-x-3">
-                          <div className="p-2 bg-purple-500 rounded-lg">
-                            <BookOpen className="h-4 w-4 text-white" />
+                          <div className="p-2 bg-purple-500 rounded-lg relative">
+                            <Trophy className="h-4 w-4 text-white" />
+                            <div className="absolute -top-1 -right-1 w-2 h-2 bg-purple-400 rounded-full animate-ping"></div>
                           </div>
                           <div>
-                            <p className="text-xs text-purple-600 dark:text-purple-400 font-medium uppercase tracking-wider">Active Course</p>
-                            <p className="text-lg font-bold text-purple-900 dark:text-purple-100">
-                              {selectedCourse === "all" ? "All" : selectedCourse}
+                            <p className="text-xs text-purple-600 dark:text-purple-400 font-medium uppercase tracking-wider">Average Score</p>
+                            <p className="text-lg font-bold text-purple-900 dark:text-purple-100 font-mono">
+                              {averageScore}%
+                            </p>
+                            <p className="text-xs text-purple-500 dark:text-purple-300 mt-1">
+                              {selectedCourse === "all" ? "All courses combined" : "Course performance"}
                             </p>
                           </div>
                         </div>
@@ -329,8 +370,8 @@ export default function TestResults() {
         {/* Results Display */}
         <div className="space-y-6">
         {isAdmin ? (
-          // Admin view: Show all students and their results
-          testResults?.map((studentData: any, index: number) => (
+          // Admin view: Show filtered students and their results based on selected course
+          filteredTestResults?.map((studentData: any, index: number) => (
             <div key={studentData.student._id} className={`rounded-3xl border border-white/20 shadow-2xl overflow-hidden ${
               index % 2 === 0 
                 ? 'bg-gradient-to-r from-green-500/10 to-emerald-500/10' 
@@ -573,16 +614,23 @@ export default function TestResults() {
       </div>
 
       {/* Empty state */}
-      {(!testResults || testResults.length === 0) && (
+      {(!filteredTestResults || filteredTestResults.length === 0) && (
         <Card>
           <CardContent className="py-12 text-center">
             <User className="h-12 w-12 mx-auto mb-4 text-gray-400" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              {isAdmin ? "No students found" : "No test results yet"}
+              {isAdmin 
+                ? selectedCourse === "all" 
+                  ? "No students found" 
+                  : `No students found for ${selectedCourse}`
+                : "No test results yet"
+              }
             </h3>
             <p className="text-gray-500">
               {isAdmin 
-                ? "No students are available in the system" 
+                ? selectedCourse === "all"
+                  ? "No students are available in the system" 
+                  : `No students have taken tests in ${selectedCourse} course yet`
                 : "Complete some tests to see your results here"
               }
             </p>
