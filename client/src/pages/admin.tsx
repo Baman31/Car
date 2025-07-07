@@ -40,13 +40,20 @@ export default function Admin() {
   const [editingCourse, setEditingCourse] = useState<any>(null);
   const [activeTab, setActiveTab] = useState("analytics");
 
-  const { data: adminStats, isLoading: statsLoading } = useQuery<{
-    totalUsers: number;
-    activeCourses: number;
-    testsCompleted: number;
+  const { data: adminStats, isLoading: statsLoading, refetch: refetchStats } = useQuery<{
+    totalCourses: number;
+    totalStudents: number;
+    studentsEnrolled: number;
     averageScore: number;
+    averageCompletion: number;
+    courseCompletionRate: number;
+    completedCourses: number;
+    testsCompleted: number;
+    approvedStudents: number;
+    activeCourses: number;
   }>({
     queryKey: ["/api/mongo/admin/stats"],
+    refetchInterval: 30000, // Refresh every 30 seconds for real-time data
   });
 
   const { data: courses, isLoading: coursesLoading } = useQuery<any[]>({
@@ -210,16 +217,16 @@ export default function Admin() {
               {/* Admin stats mini cards */}
               <div className="hidden lg:flex space-x-4">
                 <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 text-center min-w-[120px] border border-white/30">
-                  <div className="text-2xl font-bold text-white">{adminStats?.totalUsers || 0}</div>
-                  <div className="text-blue-100 text-sm font-medium">Total Users</div>
+                  <div className="text-2xl font-bold text-white">{adminStats?.totalCourses || 0}</div>
+                  <div className="text-blue-100 text-sm font-medium">Total Courses</div>
                 </div>
                 <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 text-center min-w-[120px] border border-white/30">
-                  <div className="text-2xl font-bold text-white">{adminStats?.activeCourses || 0}</div>
-                  <div className="text-blue-100 text-sm font-medium">Active Courses</div>
+                  <div className="text-2xl font-bold text-white">{adminStats?.studentsEnrolled || 0}</div>
+                  <div className="text-blue-100 text-sm font-medium">Enrollments</div>
                 </div>
                 <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 text-center min-w-[120px] border border-white/30">
-                  <div className="text-2xl font-bold text-white">{adminStats?.testsCompleted || 0}</div>
-                  <div className="text-blue-100 text-sm font-medium">Tests Completed</div>
+                  <div className="text-2xl font-bold text-white">{adminStats?.averageScore || 0}%</div>
+                  <div className="text-blue-100 text-sm font-medium">Avg Score</div>
                 </div>
               </div>
             </div>
@@ -369,17 +376,16 @@ export default function Admin() {
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Users</p>
-                        <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                          {analyticsData.totalActiveUsers}
+                        <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Total Courses</p>
+                        <p className="text-3xl font-bold text-blue-900 dark:text-blue-100">
+                          {adminStats?.totalCourses || 0}
                         </p>
-                        <p className="text-xs text-green-600 dark:text-green-400 flex items-center mt-1">
-                          <TrendingUp className="w-3 h-3 mr-1" />
-                          +{analyticsData.recentActivity.newUsers} this week
+                        <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                          {adminStats?.activeCourses || 0} active courses
                         </p>
                       </div>
                       <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
-                        <Users className="w-6 h-6 text-blue-600" />
+                        <BookOpen className="w-6 h-6 text-blue-600" />
                       </div>
                     </div>
                   </CardContent>
@@ -390,17 +396,16 @@ export default function Admin() {
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Active Courses</p>
-                        <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                          {analyticsData.activeCourses}
+                        <p className="text-sm font-medium text-green-600 dark:text-green-400">Students Enrolled</p>
+                        <p className="text-3xl font-bold text-green-900 dark:text-green-100">
+                          {adminStats?.studentsEnrolled || 0}
                         </p>
-                        <p className="text-xs text-green-600 dark:text-green-400 flex items-center mt-1">
-                          <TrendingUp className="w-3 h-3 mr-1" />
-                          +{analyticsData.recentActivity.newCourses} this week
+                        <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                          {adminStats?.totalStudents || 0} total students
                         </p>
                       </div>
                       <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
-                        <BookOpen className="w-6 h-6 text-green-600" />
+                        <Users className="w-6 h-6 text-green-600" />
                       </div>
                     </div>
                   </CardContent>
@@ -411,13 +416,12 @@ export default function Admin() {
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Test Results</p>
-                        <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                          {analyticsData.totalTestResults}
+                        <p className="text-sm font-medium text-purple-600 dark:text-purple-400">Average Score</p>
+                        <p className="text-3xl font-bold text-purple-900 dark:text-purple-100">
+                          {adminStats?.averageScore || 0}%
                         </p>
-                        <p className="text-xs text-purple-600 dark:text-purple-400 flex items-center mt-1">
-                          <Target className="w-3 h-3 mr-1" />
-                          Avg: {analyticsData.averageTestScore}%
+                        <p className="text-xs text-purple-600 dark:text-purple-400 mt-1">
+                          {adminStats?.testsCompleted || 0} tests completed
                         </p>
                       </div>
                       <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center">
@@ -432,17 +436,16 @@ export default function Admin() {
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Pending Approvals</p>
-                        <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                          {analyticsData.pendingApprovals}
+                        <p className="text-sm font-medium text-orange-600 dark:text-orange-400">Avg Completion</p>
+                        <p className="text-3xl font-bold text-orange-900 dark:text-orange-100">
+                          {adminStats?.averageCompletion || 0}%
                         </p>
-                        <p className="text-xs text-orange-600 dark:text-orange-400 flex items-center mt-1">
-                          <Activity className="w-3 h-3 mr-1" />
-                          {analyticsData.approvalRate}% approval rate
+                        <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
+                          {adminStats?.completedCourses || 0} courses completed
                         </p>
                       </div>
                       <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-xl flex items-center justify-center">
-                        <Clock className="w-6 h-6 text-orange-600" />
+                        <Target className="w-6 h-6 text-orange-600" />
                       </div>
                     </div>
                   </CardContent>

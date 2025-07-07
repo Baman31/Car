@@ -858,34 +858,69 @@ router.post('/admin/reject-user/:userId', requireAdmin, async (req, res) => {
   }
 });
 
-// Admin stats (updated with real test data)
+// Comprehensive Admin stats with real-time data
 router.get('/admin/stats', async (req, res) => {
   try {
-    const totalUsers = await User.countDocuments({ isActive: true });
+    // Basic counts
+    const totalCourses = await Course.countDocuments();
     const activeCourses = await Course.countDocuments({ isActive: true });
-    const activeTests = await Test.countDocuments({ isActive: true });
+    const totalStudents = await User.countDocuments({ role: 'student' });
+    const approvedStudents = await User.countDocuments({ role: 'student', isApproved: true });
     
-    // Calculate total test results and average score
-    const tests = await Test.find({ isActive: true });
-    let totalResults = 0;
+    // Get all enrollments for student analytics
+    const enrollments = await Enrollment.find({})
+      .populate('student', 'firstName lastName')
+      .populate('course', 'title');
+    
+    const totalEnrollments = enrollments.length;
+    
+    // Calculate average completion rate
+    let totalProgress = 0;
+    let enrollmentCount = 0;
+    enrollments.forEach(enrollment => {
+      if (enrollment.progress !== undefined) {
+        totalProgress += enrollment.progress;
+        enrollmentCount++;
+      }
+    });
+    const averageCompletion = enrollmentCount > 0 ? Math.round(totalProgress / enrollmentCount) : 0;
+    
+    // Get test results for score calculation
+    const tests = await Test.find({}).populate('course', 'title');
+    let totalTestResults = 0;
     let totalScore = 0;
     
     tests.forEach(test => {
-      test.results.forEach(result => {
-        totalResults++;
-        totalScore += (result.score / result.maxScore) * 100;
-      });
+      if (test.results && test.results.length > 0) {
+        test.results.forEach(result => {
+          totalTestResults++;
+          // Calculate percentage score
+          const percentage = (result.score / result.maxScore) * 100;
+          totalScore += percentage;
+        });
+      }
     });
     
-    const averageScore = totalResults > 0 ? Math.round(totalScore / totalResults) : 0;
+    const averageScore = totalTestResults > 0 ? Math.round(totalScore / totalTestResults) : 0;
+    
+    // Calculate course completion stats
+    const completedEnrollments = enrollments.filter(e => e.progress >= 100).length;
+    const courseCompletionRate = totalEnrollments > 0 ? Math.round((completedEnrollments / totalEnrollments) * 100) : 0;
     
     res.json({
-      totalUsers,
-      activeCourses,
-      testsCompleted: totalResults,
-      averageScore
+      totalCourses,
+      totalStudents: totalStudents,
+      studentsEnrolled: totalEnrollments,
+      averageScore,
+      averageCompletion,
+      courseCompletionRate,
+      completedCourses: completedEnrollments,
+      testsCompleted: totalTestResults,
+      approvedStudents,
+      activeCourses
     });
   } catch (error) {
+    console.error('Admin stats error:', error);
     res.status(500).json({ message: 'Failed to fetch admin stats', error: error.message });
   }
 });
