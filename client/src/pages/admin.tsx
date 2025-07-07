@@ -103,12 +103,14 @@ export default function Admin() {
 
   // Handle test edit
   const handleEditTest = (test: any) => {
+    console.log('Edit test clicked:', test);
     setEditingTest(test);
     setShowTestForm(true);
   };
 
   // Handle test delete
   const handleDeleteTest = async (testId: string) => {
+    console.log('Delete test clicked:', testId);
     if (window.confirm("Are you sure you want to delete this test? This action cannot be undone.")) {
       deleteTestMutation.mutate(testId);
     }

@@ -10,6 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 const testSchema = z.object({
   title: z.string().min(1, "Test title is required"),
@@ -53,15 +54,10 @@ export default function TestForm({ editingTest, onSuccess, onCancel }: TestFormP
       const url = editingTest ? `/api/mongo/tests/${editingTest._id}` : "/api/mongo/tests";
       const method = editingTest ? "PUT" : "POST";
       
-      const response = await fetch(url, {
+      const response = await apiRequest(url, {
         method,
-        body: JSON.stringify(data),
-        headers: { "Content-Type": "application/json" },
+        data,
       });
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to ${editingTest ? 'update' : 'create'} test: ${errorText}`);
-      }
       return response.json();
     },
     onSuccess: () => {

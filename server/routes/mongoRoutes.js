@@ -620,7 +620,7 @@ router.get('/tests/:id', async (req, res) => {
 });
 
 // Admin: Create test
-router.post('/tests', requireAdmin, async (req, res) => {
+router.post('/tests', verifyToken, requireAdmin, async (req, res) => {
   try {
     const {
       title,
@@ -653,7 +653,7 @@ router.post('/tests', requireAdmin, async (req, res) => {
 });
 
 // Admin: Update test
-router.put('/tests/:id', requireAdmin, async (req, res) => {
+router.put('/tests/:id', verifyToken, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const {
@@ -688,7 +688,7 @@ router.put('/tests/:id', requireAdmin, async (req, res) => {
 });
 
 // Admin: Delete test
-router.delete('/tests/:id', requireAdmin, async (req, res) => {
+router.delete('/tests/:id', verifyToken, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     
