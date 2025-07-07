@@ -494,9 +494,7 @@ export default function Admin() {
                         <p className="text-3xl font-bold text-orange-900 dark:text-orange-100">
                           {adminStats?.averageCompletion || 0}%
                         </p>
-                        <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
-                          {adminStats?.completedCourses || 0} courses completed
-                        </p>
+                        
                       </div>
                       <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-xl flex items-center justify-center">
                         <Target className="w-6 h-6 text-orange-600" />
