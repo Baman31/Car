@@ -266,10 +266,7 @@ export default function Dashboard() {
                     <p className="text-3xl font-bold text-gray-900 dark:text-white">
                       {dashboardData.overallProgress}%
                     </p>
-                    <p className="text-xs text-orange-600 dark:text-orange-400 flex items-center mt-1">
-                      <Activity className="w-3 h-3 mr-1" />
-                      {dashboardData.inProgressCourses} in progress
-                    </p>
+                    
                   </div>
                   <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-xl flex items-center justify-center">
                     <BarChart3 className="w-6 h-6 text-orange-600" />
