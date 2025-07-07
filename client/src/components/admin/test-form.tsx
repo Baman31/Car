@@ -56,10 +56,7 @@ export default function TestForm({ editingTest, onSuccess, onCancel }: TestFormP
       const url = editingTest ? `/api/mongo/tests/${editingTest._id}` : "/api/mongo/tests";
       const method = editingTest ? "PUT" : "POST";
       
-      const response = await apiRequest(url, {
-        method,
-        data,
-      });
+      const response = await apiRequest(method, url, data);
       return response.json();
     },
     onSuccess: () => {
@@ -326,8 +323,8 @@ export default function TestForm({ editingTest, onSuccess, onCancel }: TestFormP
                           <Input 
                             type="number" 
                             placeholder="100" 
-                            {...field}
-                            onChange={(e) => field.onChange(Number(e.target.value))}
+                            value={field.value || ''}
+                            onChange={(e) => field.onChange(Number(e.target.value) || 100)}
                             className="h-12 text-lg border-2 border-gray-200 dark:border-gray-700 focus:border-yellow-500 rounded-xl bg-white dark:bg-gray-800 shadow-sm pl-4 pr-16"
                           />
                           <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 font-medium">

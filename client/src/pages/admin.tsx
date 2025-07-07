@@ -80,10 +80,8 @@ export default function Admin() {
   // Delete test mutation
   const deleteTestMutation = useMutation({
     mutationFn: async (testId: string) => {
-      const response = await apiRequest(`/api/mongo/tests/${testId}`, {
-        method: "DELETE",
-      });
-      return response;
+      const response = await apiRequest("DELETE", `/api/mongo/tests/${testId}`);
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/mongo/tests"] });
