@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { Edit, Plus, Award, Users, BookOpen } from "lucide-react";
+import { Edit, Plus, Award, Users, BookOpen, RefreshCw, Activity } from "lucide-react";
 
 interface GradeFormProps {
   student: any;
@@ -21,6 +21,7 @@ function GradeForm({ student, test, existingResult, onSuccess }: GradeFormProps)
   const [score, setScore] = useState(existingResult?.score || "");
   const [grade, setGrade] = useState(existingResult?.grade || "");
   const [timeSpent, setTimeSpent] = useState(existingResult?.timeSpent || "");
+  const [maxScore, setMaxScore] = useState(existingResult?.maxScore || test.maxScore || 100);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -35,6 +36,7 @@ function GradeForm({ student, test, existingResult, onSuccess }: GradeFormProps)
           score: Number(score),
           grade,
           timeSpent: Number(timeSpent) || 0,
+          maxScore: Number(maxScore) || 100,
         }),
       });
       if (!response.ok) {
@@ -46,6 +48,7 @@ function GradeForm({ student, test, existingResult, onSuccess }: GradeFormProps)
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/mongo/tests"] });
       queryClient.invalidateQueries({ queryKey: ["/api/mongo/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/mongo/admin/student-results"] });
       toast({
         title: "Success",
         description: `Grade ${existingResult ? 'updated' : 'added'} for ${student.firstName} ${student.lastName}`,
@@ -78,7 +81,7 @@ function GradeForm({ student, test, existingResult, onSuccess }: GradeFormProps)
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <label className="block text-sm font-medium mb-1">
-          Score (out of {test.maxScore || 100})
+          Score (out of {maxScore})
         </label>
         <Input
           type="number"
@@ -86,7 +89,20 @@ function GradeForm({ student, test, existingResult, onSuccess }: GradeFormProps)
           onChange={(e) => setScore(e.target.value)}
           placeholder="Enter score"
           min="0"
-          max={test.maxScore || 100}
+          max={maxScore}
+        />
+      </div>
+      
+      <div>
+        <label className="block text-sm font-medium mb-1">
+          Max Score
+        </label>
+        <Input
+          type="number"
+          value={maxScore}
+          onChange={(e) => setMaxScore(e.target.value)}
+          placeholder="Enter max score"
+          min="1"
         />
       </div>
       
@@ -142,15 +158,35 @@ export default function StudentGrades() {
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const [selectedTestData, setSelectedTestData] = useState<any>(null);
   const [existingResult, setExistingResult] = useState<any>(null);
+  const queryClient = useQueryClient();
 
+  // Real-time data fetching with auto-refresh
   const { data: tests, isLoading: testsLoading } = useQuery<any[]>({
     queryKey: ["/api/mongo/tests"],
+    refetchInterval: 5000, // Refresh every 5 seconds for real-time updates
   });
 
   const { data: students, isLoading: studentsLoading } = useQuery<any[]>({
     queryKey: ["/api/mongo/users"],
     select: (data) => data.filter((user: any) => user.role === 'student'),
+    refetchInterval: 5000, // Refresh every 5 seconds for real-time updates
   });
+
+  const { data: studentResults, isLoading: resultsLoading } = useQuery<any[]>({
+    queryKey: ["/api/mongo/admin/student-results"],
+    refetchInterval: 5000, // Refresh every 5 seconds for real-time updates
+  });
+
+  // Auto-refresh test results data
+  useEffect(() => {
+    const interval = setInterval(() => {
+      queryClient.invalidateQueries({ queryKey: ["/api/mongo/tests"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/mongo/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/mongo/admin/student-results"] });
+    }, 5000); // Refresh every 5 seconds
+
+    return () => clearInterval(interval);
+  }, [queryClient]);
 
   const openGradeDialog = (student: any, test: any, existingResult?: any) => {
     setSelectedStudent(student);
@@ -192,20 +228,55 @@ export default function StudentGrades() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h3 className="text-2xl font-bold text-gray-900">Test Grades Management</h3>
-          <p className="text-gray-600">Manage student grades organized by test</p>
-        </div>
-        
-        <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-2 text-sm text-gray-600">
-            <Users className="h-4 w-4" />
-            <span>{students?.length || 0} Students</span>
-          </div>
-          <div className="flex items-center space-x-2 text-sm text-gray-600">
-            <BookOpen className="h-4 w-4" />
-            <span>{tests?.length || 0} Tests</span>
+      {/* Enhanced Header with Real-time Indicators */}
+      <div className="rounded-3xl border border-white/20 shadow-2xl overflow-hidden bg-gradient-to-r from-purple-50/50 via-pink-50/50 to-rose-50/50 dark:from-purple-900/20 dark:via-pink-900/20 dark:to-rose-900/20">
+        <div className="h-1 bg-gradient-to-r from-purple-500 via-pink-500 to-rose-500" />
+        <div className="bg-gradient-to-r from-white/10 to-white/5 backdrop-blur-sm">
+          <div className="p-8">
+            <div className="flex flex-col lg:flex-row gap-6 justify-between items-start lg:items-center">
+              <div className="flex items-center space-x-6">
+                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center shadow-lg">
+                  <Award className="w-10 h-10 text-white" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-3xl font-bold text-gray-900 dark:text-white">
+                    Real-Time Test Results
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-300 text-lg">
+                    Live student performance tracking and grading system
+                  </p>
+                </div>
+              </div>
+              
+              {/* Real-time Stats */}
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2 bg-green-50 dark:bg-green-900/20 px-4 py-2 rounded-xl border border-green-200 dark:border-green-800">
+                  <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
+                  <span className="text-green-800 dark:text-green-200 text-sm font-medium">Live Updates</span>
+                </div>
+                <div className="flex items-center space-x-2 bg-purple-50 dark:bg-purple-900/20 px-4 py-2 rounded-xl border border-purple-200 dark:border-purple-800">
+                  <Users className="h-4 w-4 text-purple-600" />
+                  <span className="text-purple-800 dark:text-purple-200 text-sm font-medium">{students?.length || 0} Students</span>
+                </div>
+                <div className="flex items-center space-x-2 bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-xl border border-blue-200 dark:border-blue-800">
+                  <BookOpen className="h-4 w-4 text-blue-600" />
+                  <span className="text-blue-800 dark:text-blue-200 text-sm font-medium">{tests?.length || 0} Tests</span>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    queryClient.invalidateQueries({ queryKey: ["/api/mongo/tests"] });
+                    queryClient.invalidateQueries({ queryKey: ["/api/mongo/users"] });
+                    queryClient.invalidateQueries({ queryKey: ["/api/mongo/admin/student-results"] });
+                  }}
+                  className="bg-white/80 hover:bg-white border-gray-200 hover:border-gray-300"
+                >
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Refresh
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -246,6 +317,12 @@ export default function StudentGrades() {
                   <p className="text-sm text-gray-600">
                     {test.course?.title} • Max Score: {test.maxScore || 100}
                   </p>
+                  <div className="flex items-center space-x-2 mt-2">
+                    <div className="flex items-center space-x-1 text-xs text-green-600">
+                      <Activity className="w-3 h-3" />
+                      <span>Live Data</span>
+                    </div>
+                  </div>
                 </div>
                 <Badge variant="outline">
                   {test.results?.length || 0} / {students?.length || 0} Completed
@@ -279,8 +356,8 @@ export default function StudentGrades() {
                           <td className="py-2 text-gray-600">{student.email}</td>
                           <td className="py-2 text-center">
                             {result ? (
-                              <span>
-                                {result.score}/{test.maxScore || 100}
+                              <span className="font-semibold">
+                                {result.score}/{result.maxScore || test.maxScore || 100}
                               </span>
                             ) : (
                               <span className="text-gray-400">Not graded</span>

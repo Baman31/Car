@@ -90,7 +90,7 @@ const testSchema = new mongoose.Schema({
   },
   maxScore: {
     type: Number,
-    default: 0
+    default: 100
   },
   passingScore: {
     type: Number,

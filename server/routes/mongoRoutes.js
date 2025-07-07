@@ -639,7 +639,8 @@ router.post('/tests', requireAdmin, async (req, res) => {
       questions: questions || [],
       timeLimit: timeLimit || 60,
       passingScore: passingScore || 60,
-      attempts: attempts || 3
+      attempts: attempts || 3,
+      maxScore: 100 // Set default max score to 100
     });
 
     await test.save();
@@ -655,7 +656,7 @@ router.post('/tests', requireAdmin, async (req, res) => {
 router.post('/tests/:testId/results', async (req, res) => {
   try {
     const { testId } = req.params;
-    const { studentId, score, grade, answers, timeSpent } = req.body;
+    const { studentId, score, grade, answers, timeSpent, maxScore } = req.body;
 
     // Validate required fields
     if (!studentId || score === undefined || !grade) {
@@ -681,7 +682,7 @@ router.post('/tests/:testId/results', async (req, res) => {
     const resultData = {
       student: studentId,
       score: Number(score),
-      maxScore: test.maxScore || 100,
+      maxScore: Number(maxScore) || test.maxScore || 100,
       grade,
       answers: answers || [],
       timeSpent: Number(timeSpent) || 0,
