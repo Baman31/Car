@@ -456,9 +456,7 @@ export default function Admin() {
                         <p className="text-3xl font-bold text-green-900 dark:text-green-100">
                           {adminStats?.uniqueStudentsEnrolled || adminStats?.totalStudents || 0}
                         </p>
-                        <p className="text-xs text-green-600 dark:text-green-400 mt-1">
-                          {adminStats?.totalStudents || 0} total students
-                        </p>
+                        
                       </div>
                       <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
                         <Users className="w-6 h-6 text-green-600" />
