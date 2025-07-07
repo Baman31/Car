@@ -1,6 +1,7 @@
 import * as client from "openid-client";
 import { Strategy, type VerifyFunction } from "openid-client/passport";
 import passport from "passport";
+import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import session from "express-session";
 import type { Express, RequestHandler } from "express";
 import memoize from "memoizee";
@@ -82,13 +83,53 @@ export async function setupAuth(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
-  // Skip OAuth setup for local development without proper REPL_ID
-  if (process.env.REPL_ID === 'local-development-id') {
-    console.log('Skipping OAuth setup for local development');
-    return;
+  // Setup Google OAuth strategy
+  if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+    passport.use(new GoogleStrategy({
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      callbackURL: "/api/auth/google/callback"
+    }, async (accessToken, refreshToken, profile, done) => {
+      try {
+        // Check if user exists in database
+        let user = await User.findOne({ email: profile.emails?.[0]?.value });
+        
+        if (!user) {
+          // Create new user with Google profile data
+          user = new User({
+            email: profile.emails?.[0]?.value,
+            firstName: profile.name?.givenName || '',
+            lastName: profile.name?.familyName || '',
+            username: profile.emails?.[0]?.value?.split('@')[0] || '',
+            avatar: profile.photos?.[0]?.value || '',
+            role: 'student',
+            isApproved: false, // Requires admin approval
+            googleId: profile.id,
+            emailVerified: true // Google accounts are pre-verified
+          });
+          await user.save();
+        } else {
+          // Update existing user with Google data if not set
+          if (!user.googleId) {
+            user.googleId = profile.id;
+            user.emailVerified = true;
+            await user.save();
+          }
+        }
+        
+        return done(null, user);
+      } catch (error) {
+        console.error('Google OAuth error:', error);
+        return done(error, null);
+      }
+    }));
   }
 
-  const config = await getOidcConfig();
+  // Setup Replit OAuth only if properly configured
+  let config = null;
+  if (process.env.REPL_ID !== 'local-development-id') {
+    config = await getOidcConfig();
+  }
 
   const verify: VerifyFunction = async (
     tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
@@ -104,73 +145,92 @@ export async function setupAuth(app: Express) {
     }
   };
 
-  for (const domain of process.env.REPLIT_DOMAINS!.split(",")) {
-    const strategy = new Strategy(
-      {
-        name: `replitauth:${domain}`,
-        config,
-        scope: "openid email profile offline_access",
-        callbackURL: `https://${domain}/api/callback`,
-      },
-      verify,
-    );
-    passport.use(strategy);
+  // Only setup Replit OAuth if config is available
+  if (config) {
+    for (const domain of process.env.REPLIT_DOMAINS!.split(",")) {
+      const strategy = new Strategy(
+        {
+          name: `replitauth:${domain}`,
+          config,
+          scope: "openid email profile offline_access",
+          callbackURL: `https://${domain}/api/callback`,
+        },
+        verify,
+      );
+      passport.use(strategy);
+    }
   }
 
   passport.serializeUser((user: Express.User, cb) => cb(null, user));
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
+  // Google OAuth routes
+  app.get("/api/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+  
+  app.get("/api/auth/google/callback", passport.authenticate("google", { failureRedirect: "/auth" }), (req, res) => {
+    // Successful authentication, redirect to dashboard
+    res.redirect("/");
+  });
+
   app.get("/api/login", (req, res, next) => {
-    passport.authenticate(`replitauth:${req.hostname}`, {
-      prompt: "login consent",
-      scope: ["openid", "email", "profile", "offline_access"],
-    })(req, res, next);
+    if (config) {
+      passport.authenticate(`replitauth:${req.hostname}`, {
+        prompt: "login consent",
+        scope: ["openid", "email", "profile", "offline_access"],
+      })(req, res, next);
+    } else {
+      res.redirect("/auth");
+    }
   });
 
   app.get("/api/callback", (req, res, next) => {
-    passport.authenticate(`replitauth:${req.hostname}`, (err, user) => {
-      if (err) {
-        return res.redirect("/api/login");
-      }
-      if (!user) {
-        return res.redirect("/api/login");
-      }
-      
-      req.logIn(user, async (err) => {
+    if (config) {
+      passport.authenticate(`replitauth:${req.hostname}`, (err, user) => {
         if (err) {
           return res.redirect("/api/login");
         }
-        
-        // Check if user has completed account setup
-        const claims = user.claims;
-        if (claims && claims.email) {
-          try {
-            const existingUser = await findUserByEmail(claims.email);
-            if (!existingUser) {
-              // New user - redirect to account setup with email info
-              const setupParams = new URLSearchParams({
-                email: claims.email,
-                firstName: claims.first_name || '',
-                lastName: claims.last_name || '',
-                profileImageUrl: claims.profile_image_url || ''
-              });
-              return res.redirect(`/account-setup?${setupParams.toString()}`);
-            } else {
-              // Store user in session
-              req.user.dbUser = existingUser;
-              // Existing user - redirect to dashboard
-              return res.redirect("/");
-            }
-          } catch (error) {
-            console.error("Error checking setup status:", error);
-            return res.redirect("/account-setup");
-          }
+        if (!user) {
+          return res.redirect("/api/login");
         }
         
-        // Fallback redirect
-        res.redirect("/");
-      });
-    })(req, res, next);
+        req.logIn(user, async (err) => {
+          if (err) {
+            return res.redirect("/api/login");
+          }
+          
+          // Check if user has completed account setup
+          const claims = user.claims;
+          if (claims && claims.email) {
+            try {
+              const existingUser = await findUserByEmail(claims.email);
+              if (!existingUser) {
+                // New user - redirect to account setup with email info
+                const setupParams = new URLSearchParams({
+                  email: claims.email,
+                  firstName: claims.first_name || '',
+                  lastName: claims.last_name || '',
+                  profileImageUrl: claims.profile_image_url || ''
+                });
+                return res.redirect(`/account-setup?${setupParams.toString()}`);
+              } else {
+                // Store user in session
+                req.user.dbUser = existingUser;
+                // Existing user - redirect to dashboard
+                return res.redirect("/");
+              }
+            } catch (error) {
+              console.error("Error checking setup status:", error);
+              return res.redirect("/account-setup");
+            }
+          }
+          
+          // Fallback redirect
+          res.redirect("/");
+        });
+      })(req, res, next);
+    } else {
+      res.redirect("/auth");
+    }
   });
 
   app.get("/api/logout", (req, res) => {

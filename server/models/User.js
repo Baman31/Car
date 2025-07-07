@@ -17,7 +17,9 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: true,
+    required: function() {
+      return !this.googleId; // Password not required for Google OAuth users
+    },
     minlength: 6
   },
   firstName: {
@@ -38,6 +40,15 @@ const userSchema = new mongoose.Schema({
   avatar: {
     type: String,
     default: null
+  },
+  googleId: {
+    type: String,
+    unique: true,
+    sparse: true
+  },
+  emailVerified: {
+    type: Boolean,
+    default: false
   },
   replitId: {
     type: String,

@@ -140,12 +140,8 @@ export default function AuthPage() {
   };
 
   const handleGoogleLogin = () => {
-    // For now, show a toast that Google login is not yet implemented
-    toast({
-      title: "Google Login",
-      description: "Google login integration coming soon! Please use email/password for now.",
-      variant: "default",
-    });
+    // Redirect to Google OAuth endpoint
+    window.location.href = "/api/auth/google";
   };
 
   return (
