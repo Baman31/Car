@@ -1373,8 +1373,8 @@ export default function Admin() {
             </div>
           )}
 
-          {/* Grades Tab */}
-          {activeTab === "grades" && (
+          {/* Grading Tab */}
+          {activeTab === "grading" && (
             <div className="space-y-6">
               <StudentGrades />
             </div>
