@@ -125,6 +125,18 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+- **July 07, 2025**: Course-Specific Student Filtering for Test Grading Complete
+  - **Fixed Test Grading Interface**: Test grading now shows only students enrolled in the specific course:
+    - Added new API endpoint `/api/mongo/admin/course/:courseId/students` to fetch students by course enrollment
+    - Updated student-grades component to dynamically filter students based on selected test's course
+    - When "All Tests" is selected, shows all students for backwards compatibility
+    - When specific test is selected, only shows students enrolled in that test's course
+    - Enhanced query system with proper caching and real-time updates
+  - **Migration Successfully Completed**: All checklist items finished, project running smoothly in Replit environment
+  - **Backend Enhancement**: Added course-specific student lookup with proper enrollment validation
+  - **Frontend Enhancement**: Dynamic student filtering based on test selection with improved UX
+  - **All Systems Operational**: Test grading now properly scoped to course enrollments as requested
+
 - **July 07, 2025**: Time Spent Field Removed from Test System
   - **Complete Time Tracking Removal**: Eliminated time spent field from test grading and results:
     - Removed time spent input field from student grading form in admin panel

@@ -45,7 +45,7 @@ function GradeForm({ student, test, existingResult, onSuccess }: GradeFormProps)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/mongo/tests"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/mongo/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/mongo/admin/course"] });
       queryClient.invalidateQueries({ queryKey: ["/api/mongo/admin/student-results"] });
       toast({
         title: "Success",
@@ -153,9 +153,36 @@ export default function StudentGrades() {
     refetchInterval: 5000, // Refresh every 5 seconds for real-time updates
   });
 
+  // Get students for the selected test's course
+  const currentTest = tests?.find(test => test._id === selectedTest);
   const { data: students, isLoading: studentsLoading } = useQuery<any[]>({
-    queryKey: ["/api/mongo/users"],
-    select: (data) => data.filter((user: any) => user.role === 'student'),
+    queryKey: selectedTest === "all" ? ["/api/mongo/users", "students"] : ["/api/mongo/admin/course", currentTest?.course?._id, "students"],
+    queryFn: async () => {
+      if (selectedTest === "all") {
+        // For "all" tests, fetch all students
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/api/mongo/users`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (!response.ok) throw new Error('Failed to fetch students');
+        const data = await response.json();
+        return data.filter((user: any) => user.role === 'student');
+      } else {
+        // For specific test, fetch only students enrolled in that course
+        if (!currentTest?.course?._id) return [];
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/api/mongo/admin/course/${currentTest.course._id}/students`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (!response.ok) throw new Error('Failed to fetch students');
+        return response.json();
+      }
+    },
+    enabled: selectedTest === "all" || !!currentTest?.course?._id,
     refetchInterval: 5000, // Refresh every 5 seconds for real-time updates
   });
 
@@ -168,7 +195,7 @@ export default function StudentGrades() {
   useEffect(() => {
     const interval = setInterval(() => {
       queryClient.invalidateQueries({ queryKey: ["/api/mongo/tests"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/mongo/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/mongo/admin/course"] });
       queryClient.invalidateQueries({ queryKey: ["/api/mongo/admin/student-results"] });
     }, 5000); // Refresh every 5 seconds
 
@@ -254,7 +281,7 @@ export default function StudentGrades() {
                   size="sm"
                   onClick={() => {
                     queryClient.invalidateQueries({ queryKey: ["/api/mongo/tests"] });
-                    queryClient.invalidateQueries({ queryKey: ["/api/mongo/users"] });
+                    queryClient.invalidateQueries({ queryKey: ["/api/mongo/admin/course"] });
                     queryClient.invalidateQueries({ queryKey: ["/api/mongo/admin/student-results"] });
                   }}
                   className="bg-white/80 hover:bg-white border-gray-200 hover:border-gray-300"

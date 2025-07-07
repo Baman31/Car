@@ -853,6 +853,26 @@ router.get('/admin/student-results', verifyToken, requireAdmin, async (req, res)
   }
 });
 
+// Admin: Get students enrolled in a specific course
+router.get('/admin/course/:courseId/students', verifyToken, requireAdmin, async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    
+    // Find all enrollments for this course
+    const enrollments = await Enrollment.find({ course: courseId })
+      .populate('student', 'firstName lastName email _id role')
+      .select('student');
+    
+    // Extract students from enrollments
+    const students = enrollments.map(enrollment => enrollment.student)
+      .filter(student => student && student.role === 'student');
+    
+    res.json(students);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch course students', error: error.message });
+  }
+});
+
 // Admin: Get pending user approvals
 router.get('/admin/pending-approvals', verifyToken, requireAdmin, async (req, res) => {
   try {
