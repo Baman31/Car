@@ -710,7 +710,7 @@ router.delete('/tests/:id', verifyToken, requireAdmin, async (req, res) => {
 router.post('/tests/:testId/results', async (req, res) => {
   try {
     const { testId } = req.params;
-    const { studentId, score, grade, answers, timeSpent, maxScore } = req.body;
+    const { studentId, score, grade, answers, maxScore } = req.body;
 
     // Validate required fields
     if (!studentId || score === undefined || !grade) {
@@ -739,7 +739,6 @@ router.post('/tests/:testId/results', async (req, res) => {
       maxScore: Number(maxScore) || test.maxScore || 100,
       grade,
       answers: answers || [],
-      timeSpent: Number(timeSpent) || 0,
       completedAt: new Date()
     };
 
@@ -806,8 +805,7 @@ router.get('/student/my-results', verifyToken, async (req, res) => {
           maxScore: test.maxScore,
           score: result.score,
           grade: result.grade,
-          completedAt: result.completedAt,
-          timeSpent: result.timeSpent
+          completedAt: result.completedAt
         });
       }
     });

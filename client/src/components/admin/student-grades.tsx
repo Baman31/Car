@@ -20,7 +20,6 @@ interface GradeFormProps {
 function GradeForm({ student, test, existingResult, onSuccess }: GradeFormProps) {
   const [score, setScore] = useState(existingResult?.score || "");
   const [grade, setGrade] = useState(existingResult?.grade || "");
-  const [timeSpent, setTimeSpent] = useState(existingResult?.timeSpent || "");
   const [maxScore, setMaxScore] = useState(existingResult?.maxScore || test.maxScore || 100);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -35,7 +34,6 @@ function GradeForm({ student, test, existingResult, onSuccess }: GradeFormProps)
           studentId: student._id,
           score: Number(score),
           grade,
-          timeSpent: Number(timeSpent) || 0,
           maxScore: Number(maxScore) || 100,
         }),
       });
@@ -125,18 +123,7 @@ function GradeForm({ student, test, existingResult, onSuccess }: GradeFormProps)
         </Select>
       </div>
       
-      <div>
-        <label className="block text-sm font-medium mb-1">
-          Time Spent (minutes)
-        </label>
-        <Input
-          type="number"
-          value={timeSpent}
-          onChange={(e) => setTimeSpent(e.target.value)}
-          placeholder="Enter time spent"
-          min="0"
-        />
-      </div>
+
       
       <Button 
         type="submit" 
