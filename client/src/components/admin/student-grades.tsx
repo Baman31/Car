@@ -50,7 +50,7 @@ function GradeForm({ student, test, existingResult, onSuccess }: GradeFormProps)
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          student: student._id,
+          studentId: student._id,
           score: parseInt(score),
           grade: grade,
           maxScore: test.maxScore || 100
@@ -149,7 +149,7 @@ function TestGradingCard({ test, onGradeDialog, getGradeColor }: TestGradingCard
       return response.json();
     },
     enabled: !!test.course?._id,
-    refetchInterval: 5000,
+    refetchInterval: 3000,
   });
 
   if (studentsLoading) {
@@ -287,20 +287,20 @@ export default function StudentGrades() {
 
   const { data: tests, isLoading: testsLoading } = useQuery<any[]>({
     queryKey: ["/api/mongo/tests"],
-    refetchInterval: 5000,
+    refetchInterval: 3000,
   });
 
   const { data: studentResults, isLoading: resultsLoading } = useQuery<any[]>({
     queryKey: ["/api/mongo/admin/student-results"],
-    refetchInterval: 5000,
+    refetchInterval: 3000,
   });
 
-  // Auto-refresh data every 5 seconds
+  // Auto-refresh data every 3 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       queryClient.invalidateQueries({ queryKey: ["/api/mongo/tests"] });
       queryClient.invalidateQueries({ queryKey: ["/api/mongo/admin/student-results"] });
-    }, 5000);
+    }, 3000);
 
     return () => clearInterval(interval);
   }, [queryClient]);

@@ -707,7 +707,7 @@ router.delete('/tests/:id', verifyToken, requireAdmin, async (req, res) => {
 });
 
 // Admin: Add/Update test result for a student
-router.post('/tests/:testId/results', async (req, res) => {
+router.post('/tests/:testId/results', verifyToken, requireAdmin, async (req, res) => {
   try {
     const { testId } = req.params;
     const { studentId, score, grade, answers, maxScore } = req.body;
