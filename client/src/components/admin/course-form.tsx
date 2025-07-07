@@ -885,21 +885,7 @@ export default function CourseForm({ course, onSuccess, onCancel }: CourseFormPr
                     Cancel
                   </Button>
                   
-                  <Button
-                    variant="outline"
-                    className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-blue-300 dark:border-blue-600 hover:from-blue-100 hover:to-purple-100 dark:hover:from-blue-900/30 dark:hover:to-purple-900/30 text-blue-700 dark:text-blue-300 px-8 py-3 h-12"
-                  >
-                    <span className="mr-2">👀</span>
-                    Preview Course
-                  </Button>
                   
-                  <Button
-                    variant="outline"
-                    className="bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 border-yellow-300 dark:border-yellow-600 hover:from-yellow-100 hover:to-amber-100 dark:hover:from-yellow-900/30 dark:hover:to-amber-900/30 text-yellow-700 dark:text-yellow-300 px-8 py-3 h-12"
-                  >
-                    <span className="mr-2">💾</span>
-                    Save Draft
-                  </Button>
                   
                   <Button 
                     onClick={form.handleSubmit(onSubmit)}
