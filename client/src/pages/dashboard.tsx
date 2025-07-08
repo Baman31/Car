@@ -38,65 +38,50 @@ export default function Dashboard() {
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: [`/api/users/${userId}/stats`],
     enabled: !!userId,
-    refetchInterval: 3000, // Refresh every 3 seconds
   });
 
   const { data: activities, isLoading: activitiesLoading } = useQuery<RecentActivity[]>({
     queryKey: [`/api/users/${userId}/activities`],
     enabled: !!userId,
-    refetchInterval: 3000, // Refresh every 3 seconds
   });
 
-  // Real-time data queries for student dashboard
+  // Data queries for student dashboard
   const { data: enrollments, isLoading: enrollmentsLoading } = useQuery<any[]>({
-    queryKey: ["/api/mongo/student/enrollments", Math.floor(Date.now() / 1000)],
+    queryKey: ["/api/mongo/student/enrollments"],
     enabled: !!userId,
-    refetchInterval: 3000, // Refresh every 3 seconds
-    staleTime: 0, // Always fetch fresh data
-    cacheTime: 0, // Don't cache the data
   });
-
-  // Temporary debug logging
-  console.log('Enrollment data:', enrollments, 'Loading:', enrollmentsLoading);
 
 
 
   const { data: courses, isLoading: coursesLoading } = useQuery<any[]>({
     queryKey: ["/api/mongo/courses"],
     enabled: !!userId,
-    refetchInterval: 3000, // Refresh every 3 seconds
   });
 
   const { data: studentResults, isLoading: resultsLoading } = useQuery<any[]>({
     queryKey: ["/api/mongo/student/my-results"],
     enabled: !!userId && user?.role === 'student',
-    refetchInterval: 3000, // Refresh every 3 seconds
   });
 
-  // Get user dashboard stats for real-time updates
+  // Get user dashboard stats
   const { data: dashboardStats, isLoading: dashboardStatsLoading } = useQuery({
     queryKey: ["/api/mongo/user/stats"],
     enabled: !!userId,
-    refetchInterval: 3000, // Refresh every 3 seconds
   });
 
-  // Real-time dashboard refresh with 3-second intervals
-  useEffect(() => {
+  // Manual refresh function for dashboard data
+  const handleRefresh = () => {
     if (!userId) return;
     
-    const interval = setInterval(() => {
-      queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}/stats`] });
-      queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}/activities`] });
-      queryClient.invalidateQueries({ queryKey: ["/api/mongo/courses"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/mongo/user/stats"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/mongo/student/enrollments"] });
-      if (user?.role === 'student') {
-        queryClient.invalidateQueries({ queryKey: ["/api/mongo/student/my-results"] });
-      }
-    }, 3000); // Refresh every 3 seconds for real-time updates
-
-    return () => clearInterval(interval);
-  }, [queryClient, userId, user?.role]);
+    queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}/stats`] });
+    queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}/activities`] });
+    queryClient.invalidateQueries({ queryKey: ["/api/mongo/courses"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/mongo/user/stats"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/mongo/student/enrollments"] });
+    if (user?.role === 'student') {
+      queryClient.invalidateQueries({ queryKey: ["/api/mongo/student/my-results"] });
+    }
+  };
 
   // Calculate enhanced dashboard metrics with real-time updates
   const dashboardData = {
@@ -193,14 +178,7 @@ export default function Dashboard() {
                     <Button 
                       variant="outline" 
                       size="sm"
-                      onClick={() => {
-                        queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}/stats`] });
-                        queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}/enrollments`] });
-                        queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}/activities`] });
-                        if (user?.role === 'student') {
-                          queryClient.invalidateQueries({ queryKey: ["/api/mongo/student/my-results"] });
-                        }
-                      }}
+                      onClick={handleRefresh}
                       className="bg-white/80 hover:bg-white border-gray-200 hover:border-gray-300"
                     >
                       <RefreshCw className="w-4 h-4 mr-2" />
