@@ -107,21 +107,27 @@ export default function TestResults() {
     filteredTestResults.filter((student: any) => 
       student.testResults?.some((t: any) => t.result)
     ).map((student: any) => student.student._id)
-  ).size : 0;
+  ).size : (testResults?.length || 0) > 0 ? 1 : 0;
   
   // Total students enrolled in the selected course (or all courses)
   const totalStudentsInCourse = isAdmin && filteredTestResults ? filteredTestResults.length : 0;
   
   // Average score across all completed tests in selected course
-  const averageScore = isAdmin && filteredTestResults ? 
-    (() => {
+  const averageScore = (() => {
+    if (isAdmin && filteredTestResults) {
       const allScores = filteredTestResults.reduce((scores: number[], student: any) => {
         const studentScores = student.testResults?.filter((t: any) => t.result)
           .map((t: any) => (t.result.score / t.maxScore) * 100) || [];
         return scores.concat(studentScores);
       }, []);
       return allScores.length > 0 ? Math.round(allScores.reduce((sum, score) => sum + score, 0) / allScores.length) : 0;
-    })() : 85;
+    } else if (!isAdmin && testResults) {
+      // Student view: calculate average from their own results
+      const studentScores = testResults.map((result: any) => (result.score / result.maxScore) * 100);
+      return studentScores.length > 0 ? Math.round(studentScores.reduce((sum, score) => sum + score, 0) / studentScores.length) : 0;
+    }
+    return 0;
+  })();
 
   return (
     <div className="min-h-screen bg-gray-50 flex">

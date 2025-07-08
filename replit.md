@@ -146,12 +146,14 @@ Preferred communication style: Simple, everyday language.
     - DELETE `/api/mongo/courses/:courseId/modules/:moduleId/complete` - Mark module as incomplete
     - Proper JWT authentication and user-specific completion tracking
     - MongoDB schema updated to support completedBy arrays with userId and completedAt fields
-  - **Test Results Page Fixed**: Resolved continuous loading issue by removing automatic refresh intervals:
+  - **Test Results Page Fixed**: Resolved continuous loading issue and average score calculation:
     - Removed 3-second automatic refresh intervals from test results queries
     - Updated UI to show "Manual Refresh" and "Click to refresh" instead of auto-refresh indicators
     - Removed pulsing animations and "Live Data" indicators that implied automatic updates
     - Page now loads data once and refreshes only when user clicks refresh button
     - Eliminated continuous API calls that were causing performance issues
+    - Fixed average score calculation to show actual data instead of hardcoded fallback values
+    - Both admin and student views now calculate real average scores from test results
   - **All Systems Operational**: Feature works seamlessly with existing authentication and course management
 
 - **July 08, 2025**: Migration to Replit Environment Complete & Dashboard Loading Issue Fixed
