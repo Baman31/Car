@@ -49,10 +49,15 @@ export default function Dashboard() {
 
   // Real-time data queries for student dashboard
   const { data: enrollments, isLoading: enrollmentsLoading } = useQuery<any[]>({
-    queryKey: ["/api/mongo/student/enrollments"],
+    queryKey: ["/api/mongo/student/enrollments", Math.floor(Date.now() / 1000)],
     enabled: !!userId,
     refetchInterval: 3000, // Refresh every 3 seconds
+    staleTime: 0, // Always fetch fresh data
+    cacheTime: 0, // Don't cache the data
   });
+
+  // Temporary debug logging
+  console.log('Enrollment data:', enrollments, 'Loading:', enrollmentsLoading);
 
 
 
