@@ -285,20 +285,7 @@ export default function CourseDetail() {
                 )}
               </div>
 
-              {/* Notes Section */}
-              <div className="mt-10">
-                <div className="flex items-center mb-6">
-                  <div className="p-3 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl mr-4 shadow-lg">
-                    <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-2xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">PDF Notes & Resources</h3>
-                </div>
-                <div className="bg-gradient-to-br from-white via-green-50/30 to-emerald-50/30 rounded-2xl p-6 shadow-xl border border-white/20">
-                  <PdfViewer notes={notes || []} />
-                </div>
-              </div>
+              
             </div>
 
             {/* Course Sidebar */}
@@ -341,36 +328,9 @@ export default function CourseDetail() {
                     </div>
                   ))}
                   
-                  {notes?.length > 0 && (
-                    <div className="mt-6 pt-6 border-t border-gradient-to-r from-purple-200 to-pink-200">
-                      <div className="flex items-center mb-4">
-                        <div className="p-2 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg mr-3 shadow-lg">
-                          <svg className="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                          </svg>
-                        </div>
-                        <h4 className="font-bold text-gray-900">PDF Resources</h4>
-                      </div>
-                      {notes.map((note: any, index: number) => (
-                        <div key={note._id || index} className="p-4 rounded-xl bg-gradient-to-r from-white to-green-50/50 border-l-4 border-gradient-to-b from-green-500 to-emerald-500 shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-300 mb-3">
-                          <p className="font-bold text-gray-900">{note.title}</p>
-                          <div className="flex items-center mt-2 space-x-2">
-                            <div className="flex items-center bg-green-100 rounded-full px-2 py-1">
-                              <svg className="h-3 w-3 mr-1 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                              </svg>
-                              <span className="text-xs font-medium text-green-700">PDF</span>
-                            </div>
-                            <div className="flex items-center bg-blue-100 rounded-full px-2 py-1">
-                              <span className="text-xs font-medium text-blue-700">{note.fileSize || 'Download'}</span>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
                   
-                  {modules?.length === 0 && notes?.length === 0 && (
+                  
+                  {modules?.length === 0 && (
                     <div className="text-center py-12 bg-gradient-to-br from-gray-50 via-purple-50 to-pink-50 rounded-2xl border-2 border-dashed border-gray-300">
                       <div className="w-16 h-16 bg-gradient-to-br from-gray-400 to-gray-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
                         <span className="text-2xl">📚</span>
