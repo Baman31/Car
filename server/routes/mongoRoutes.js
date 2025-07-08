@@ -594,22 +594,34 @@ router.get('/user/stats', verifyToken, async (req, res) => {
     let averageScore = 0;
     
     if (userRole === 'admin') {
-      // For admin: show average score of all students
-      const testResults = await Test.aggregate([
-        { $match: { isActive: true } },
-        { $unwind: '$results' },
-        { $group: { _id: null, averageScore: { $avg: '$results.score' } } }
-      ]);
-      averageScore = testResults.length > 0 ? Math.round(testResults[0].averageScore) : 0;
+      // For admin: show average score of all students using same calculation as test results page
+      const tests = await Test.find({ isActive: true }).populate('results.student');
+      const allScores = [];
+      
+      tests.forEach(test => {
+        test.results.forEach(result => {
+          if (result.score && test.maxScore) {
+            const percentage = (result.score / test.maxScore) * 100;
+            allScores.push(percentage);
+          }
+        });
+      });
+      
+      averageScore = allScores.length > 0 ? Math.round(allScores.reduce((sum, score) => sum + score, 0) / allScores.length) : 0;
     } else {
-      // For students: show their personal average score
-      const userTestResults = await Test.aggregate([
-        { $match: { isActive: true } },
-        { $unwind: '$results' },
-        { $match: { 'results.student': userId } },
-        { $group: { _id: null, averageScore: { $avg: '$results.score' } } }
-      ]);
-      averageScore = userTestResults.length > 0 ? Math.round(userTestResults[0].averageScore) : 0;
+      // For students: show their personal average score using same calculation as test results page
+      const tests = await Test.find({ isActive: true });
+      const userScores = [];
+      
+      tests.forEach(test => {
+        const userResult = test.results.find(result => result.student.toString() === userId);
+        if (userResult && userResult.score && test.maxScore) {
+          const percentage = (userResult.score / test.maxScore) * 100;
+          userScores.push(percentage);
+        }
+      });
+      
+      averageScore = userScores.length > 0 ? Math.round(userScores.reduce((sum, score) => sum + score, 0) / userScores.length) : 0;
     }
     
     res.json({
