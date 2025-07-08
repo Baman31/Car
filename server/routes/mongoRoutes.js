@@ -962,8 +962,11 @@ router.get('/student/my-results', verifyToken, async (req, res) => {
 
 // Get student's own enrollments
 router.get('/student/enrollments', verifyToken, async (req, res) => {
+  // Disable caching to ensure fresh requests
+  res.set('Cache-Control', 'no-cache');
   try {
     const currentUser = req.user?.dbUser;
+    
     if (!currentUser || currentUser.role !== 'student') {
       return res.status(403).json({ message: 'Student access required' });
     }
@@ -974,7 +977,95 @@ router.get('/student/enrollments', verifyToken, async (req, res) => {
     
     res.json(enrollments);
   } catch (error) {
+    console.error('Error fetching enrollments:', error);
     res.status(500).json({ message: 'Failed to fetch enrollments', error: error.message });
+  }
+});
+
+// Create enrollment for current user
+router.post('/student/enroll/:courseId', verifyToken, async (req, res) => {
+  try {
+    const currentUser = req.user?.dbUser;
+    if (!currentUser || currentUser.role !== 'student') {
+      return res.status(403).json({ message: 'Student access required' });
+    }
+    
+    const courseId = req.params.courseId;
+    
+    // Check if enrollment already exists
+    const existingEnrollment = await Enrollment.findOne({
+      student: currentUser._id,
+      course: courseId
+    });
+    
+    if (existingEnrollment) {
+      return res.json({ message: 'Already enrolled', enrollment: existingEnrollment });
+    }
+    
+    // Create enrollment
+    const enrollment = new Enrollment({
+      student: currentUser._id,
+      course: courseId,
+      progress: 0,
+      enrollmentDate: new Date(),
+      isCompleted: false
+    });
+    
+    await enrollment.save();
+    console.log('New enrollment created for user:', currentUser.firstName, currentUser.lastName);
+    
+    res.json({ message: 'Enrollment created successfully', enrollment });
+  } catch (error) {
+    console.error('Error creating enrollment:', error);
+    res.status(500).json({ message: 'Failed to create enrollment', error: error.message });
+  }
+});
+
+// Sync user enrolledCourses with Enrollment documents
+router.post('/student/sync-enrollments', verifyToken, async (req, res) => {
+  try {
+    const currentUser = req.user?.dbUser;
+    if (!currentUser || currentUser.role !== 'student') {
+      return res.status(403).json({ message: 'Student access required' });
+    }
+    
+    console.log('Syncing enrollments for user:', currentUser.firstName, currentUser.lastName);
+    console.log('User enrolledCourses array:', currentUser.enrolledCourses);
+    
+    const syncedEnrollments = [];
+    
+    for (const courseId of currentUser.enrolledCourses) {
+      // Check if enrollment document exists
+      const existingEnrollment = await Enrollment.findOne({
+        student: currentUser._id,
+        course: courseId
+      });
+      
+      if (!existingEnrollment) {
+        // Create missing enrollment document
+        const enrollment = new Enrollment({
+          student: currentUser._id,
+          course: courseId,
+          progress: 25,
+          enrollmentDate: new Date(),
+          isCompleted: false,
+          completedModules: []
+        });
+        
+        await enrollment.save();
+        console.log('Created enrollment for course:', courseId);
+        syncedEnrollments.push(enrollment);
+      }
+    }
+    
+    res.json({ 
+      message: 'Enrollments synced successfully',
+      created: syncedEnrollments.length,
+      enrollments: syncedEnrollments
+    });
+  } catch (error) {
+    console.error('Error syncing enrollments:', error);
+    res.status(500).json({ message: 'Failed to sync enrollments', error: error.message });
   }
 });
 

@@ -54,8 +54,7 @@ export default function Dashboard() {
     refetchInterval: 3000, // Refresh every 3 seconds
   });
 
-  // Debug log to see enrollment data
-  console.log('Enrollments data:', enrollments);
+
 
   const { data: courses, isLoading: coursesLoading } = useQuery<any[]>({
     queryKey: ["/api/mongo/courses"],
