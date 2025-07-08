@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Search, Users, BookOpen, TrendingUp, Star, Clock } from "lucide-react";
+import { Search, Users, BookOpen, TrendingUp, Star, Clock, FileText, Trophy } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,11 +9,13 @@ import { Badge } from "@/components/ui/badge";
 import CourseCard from "@/components/course-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import Sidebar from "@/components/sidebar";
+import { useAuth } from "@/hooks/useAuth";
 import type { Course, Enrollment } from "@shared/schema";
 
 export default function Courses() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const { user } = useAuth();
   
   // Mock user ID - in real app this would come from auth context
   const userId = 2;
@@ -38,13 +40,17 @@ export default function Courses() {
     queryKey: [`/api/users/${userId}/enrollments`],
   });
 
-  // Real-time platform statistics
-  const { data: platformStats, isLoading: statsLoading } = useQuery({
-    queryKey: ["/api/mongo/platform/stats"],
+  // Real-time user-specific statistics
+  const { data: userStats, isLoading: statsLoading } = useQuery({
+    queryKey: ["/api/mongo/user/stats"],
     queryFn: async () => {
-      const response = await fetch("/api/mongo/platform/stats");
+      const response = await fetch("/api/mongo/user/stats", {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
       if (!response.ok) {
-        throw new Error("Failed to fetch platform stats");
+        throw new Error("Failed to fetch user stats");
       }
       return response.json();
     },
@@ -139,40 +145,51 @@ export default function Courses() {
               <Card className="bg-white/10 backdrop-blur-sm border-white/20">
                 <CardContent className="p-6 text-center">
                   <BookOpen className="w-12 h-12 text-yellow-400 mx-auto mb-4" />
-                  <h3 className="text-2xl font-bold text-white mb-2">{courses?.length || 0}</h3>
-                  <p className="text-blue-100">Available Courses</p>
-                </CardContent>
-              </Card>
-              <Card className="bg-white/10 backdrop-blur-sm border-white/20">
-                <CardContent className="p-6 text-center">
-                  <Users className="w-12 h-12 text-green-400 mx-auto mb-4" />
                   <h3 className="text-2xl font-bold text-white mb-2">
                     {statsLoading ? (
                       <div className="animate-pulse bg-white/20 h-8 w-16 rounded mx-auto"></div>
                     ) : (
                       <span className="relative">
-                        {platformStats?.activeStudents || 0}
-                        <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                        {userStats?.totalCourses || courses?.length || 0}
+                        <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
                       </span>
                     )}
                   </h3>
-                  <p className="text-blue-100">Active Students</p>
+                  <p className="text-blue-100">Available Courses</p>
                 </CardContent>
               </Card>
               <Card className="bg-white/10 backdrop-blur-sm border-white/20">
                 <CardContent className="p-6 text-center">
-                  <Star className="w-12 h-12 text-purple-400 mx-auto mb-4" />
+                  <FileText className="w-12 h-12 text-green-400 mx-auto mb-4" />
+                  <h3 className="text-2xl font-bold text-white mb-2">
+                    {statsLoading ? (
+                      <div className="animate-pulse bg-white/20 h-8 w-16 rounded mx-auto"></div>
+                    ) : (
+                      <span className="relative">
+                        {userStats?.availableTests || 0}
+                        <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                      </span>
+                    )}
+                  </h3>
+                  <p className="text-blue-100">Available Tests</p>
+                </CardContent>
+              </Card>
+              <Card className="bg-white/10 backdrop-blur-sm border-white/20">
+                <CardContent className="p-6 text-center">
+                  <Trophy className="w-12 h-12 text-purple-400 mx-auto mb-4" />
                   <h3 className="text-2xl font-bold text-white mb-2">
                     {statsLoading ? (
                       <div className="animate-pulse bg-white/20 h-8 w-12 rounded mx-auto"></div>
                     ) : (
                       <span className="relative">
-                        {platformStats?.averageRating || 4.8}
+                        {userStats?.averageScore || 0}%
                         <div className="absolute -top-1 -right-1 w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
                       </span>
                     )}
                   </h3>
-                  <p className="text-blue-100">Average Rating</p>
+                  <p className="text-blue-100">
+                    {user?.role === 'admin' ? 'Students Avg Score' : 'Your Avg Score'}
+                  </p>
                 </CardContent>
               </Card>
             </div>

@@ -553,23 +553,74 @@ router.put('/enrollments/:studentId/:courseId/progress', async (req, res) => {
 // Public platform stats endpoint (no authentication required)
 router.get('/platform/stats', async (req, res) => {
   try {
-    // Get total unique students enrolled
-    const activeStudents = await Enrollment.distinct('student');
-    
     // Get total courses available
     const totalCourses = await Course.countDocuments();
     
-    // Calculate average rating from test results (placeholder implementation)
-    const averageRating = 4.8; // This would be calculated from actual ratings
+    // Get total available tests
+    const availableTests = await Test.countDocuments({ isActive: true });
+    
+    // Calculate overall average score from all test results
+    const testResults = await Test.aggregate([
+      { $match: { isActive: true } },
+      { $unwind: '$results' },
+      { $group: { _id: null, averageScore: { $avg: '$results.score' } } }
+    ]);
+    
+    const overallAverageScore = testResults.length > 0 ? Math.round(testResults[0].averageScore) : 0;
     
     res.json({
-      activeStudents: activeStudents.length,
       totalCourses,
-      averageRating
+      availableTests,
+      overallAverageScore
     });
   } catch (error) {
     console.error('Error fetching platform stats:', error);
     res.status(500).json({ message: 'Failed to fetch platform stats', error: error.message });
+  }
+});
+
+// User-specific stats endpoint (requires authentication)
+router.get('/user/stats', verifyToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const userRole = req.user.role;
+    
+    // Get total courses available
+    const totalCourses = await Course.countDocuments();
+    
+    // Get total available tests
+    const availableTests = await Test.countDocuments({ isActive: true });
+    
+    let averageScore = 0;
+    
+    if (userRole === 'admin') {
+      // For admin: show average score of all students
+      const testResults = await Test.aggregate([
+        { $match: { isActive: true } },
+        { $unwind: '$results' },
+        { $group: { _id: null, averageScore: { $avg: '$results.score' } } }
+      ]);
+      averageScore = testResults.length > 0 ? Math.round(testResults[0].averageScore) : 0;
+    } else {
+      // For students: show their personal average score
+      const userTestResults = await Test.aggregate([
+        { $match: { isActive: true } },
+        { $unwind: '$results' },
+        { $match: { 'results.student': userId } },
+        { $group: { _id: null, averageScore: { $avg: '$results.score' } } }
+      ]);
+      averageScore = userTestResults.length > 0 ? Math.round(userTestResults[0].averageScore) : 0;
+    }
+    
+    res.json({
+      totalCourses,
+      availableTests,
+      averageScore,
+      userRole
+    });
+  } catch (error) {
+    console.error('Error fetching user stats:', error);
+    res.status(500).json({ message: 'Failed to fetch user stats', error: error.message });
   }
 });
 
