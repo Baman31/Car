@@ -125,7 +125,7 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-- **July 08, 2025**: Video Lecture Completion Tracking Feature Complete
+- **July 08, 2025**: Video Lecture Completion Tracking Feature Complete & Test Results Page Fixed
   - **Module Completion System**: Added comprehensive completion tracking for video lectures:
     - Students can now mark individual video lectures as completed using checkboxes
     - Completion status is saved to MongoDB and persists across sessions
@@ -146,6 +146,12 @@ Preferred communication style: Simple, everyday language.
     - DELETE `/api/mongo/courses/:courseId/modules/:moduleId/complete` - Mark module as incomplete
     - Proper JWT authentication and user-specific completion tracking
     - MongoDB schema updated to support completedBy arrays with userId and completedAt fields
+  - **Test Results Page Fixed**: Resolved continuous loading issue by removing automatic refresh intervals:
+    - Removed 3-second automatic refresh intervals from test results queries
+    - Updated UI to show "Manual Refresh" and "Click to refresh" instead of auto-refresh indicators
+    - Removed pulsing animations and "Live Data" indicators that implied automatic updates
+    - Page now loads data once and refreshes only when user clicks refresh button
+    - Eliminated continuous API calls that were causing performance issues
   - **All Systems Operational**: Feature works seamlessly with existing authentication and course management
 
 - **July 08, 2025**: Migration to Replit Environment Complete & Dashboard Loading Issue Fixed

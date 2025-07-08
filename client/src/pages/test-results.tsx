@@ -14,7 +14,7 @@ export default function TestResults() {
   const [selectedCourse, setSelectedCourse] = useState("all");
   const queryClient = useQueryClient();
   
-  // Get test results based on user role with real-time updates
+  // Get test results based on user role (no automatic refresh)
   const { data: testResults, isLoading } = useQuery<any[]>({
     queryKey: isAdmin ? ['/api/mongo/admin/student-results'] : ['/api/mongo/student/my-results'],
     queryFn: async () => {
@@ -34,31 +34,13 @@ export default function TestResults() {
       return response.json();
     },
     enabled: !!user,
-    refetchInterval: 3000, // Refresh every 3 seconds for real-time updates
   });
 
-  // Fetch all tests for real-time statistics
+  // Fetch all tests for statistics (no automatic refresh)
   const { data: allTests, isLoading: testsLoading } = useQuery<any[]>({
     queryKey: ["/api/mongo/tests"],
     enabled: !!user && isAdmin,
-    refetchInterval: 3000, // Refresh every 3 seconds for real-time updates
   });
-
-  // Auto-refresh data for real-time updates
-  useEffect(() => {
-    if (!user) return;
-    
-    const interval = setInterval(() => {
-      if (isAdmin) {
-        queryClient.invalidateQueries({ queryKey: ["/api/mongo/admin/student-results"] });
-        queryClient.invalidateQueries({ queryKey: ["/api/mongo/tests"] });
-      } else {
-        queryClient.invalidateQueries({ queryKey: ["/api/mongo/student/my-results"] });
-      }
-    }, 3000); // Refresh every 3 seconds
-
-    return () => clearInterval(interval);
-  }, [queryClient, user, isAdmin]);
 
   if (isLoading) {
     return (
@@ -205,16 +187,16 @@ export default function TestResults() {
               </Card>
             </div>
             
-            {/* Real-Time Update Indicator */}
+            {/* Manual Refresh Indicator */}
             <div className="mt-8 flex items-center justify-center space-x-3">
               <div className="flex items-center space-x-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 border border-white/20">
-                <Activity className="w-4 h-4 text-green-400 animate-pulse" />
-                <span className="text-white text-sm font-medium">Live Updates</span>
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-ping"></div>
+                <Activity className="w-4 h-4 text-green-400" />
+                <span className="text-white text-sm font-medium">Manual Refresh</span>
+                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
               </div>
               <div className="flex items-center space-x-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 border border-white/20">
-                <RefreshCw className="w-4 h-4 text-blue-400 animate-spin" />
-                <span className="text-white text-sm font-medium">Auto-refresh: 3s</span>
+                <RefreshCw className="w-4 h-4 text-blue-400" />
+                <span className="text-white text-sm font-medium">Click to refresh</span>
               </div>
             </div>
           </div>
@@ -299,17 +281,16 @@ export default function TestResults() {
                         {selectedCourse === "all" ? "Overall Statistics" : `${selectedCourse} Course Analytics`}
                       </h3>
                       <div className="flex items-center space-x-2 bg-white/20 dark:bg-gray-800/20 rounded-full px-3 py-1">
-                        <Activity className="w-3 h-3 text-green-400 animate-pulse" />
-                        <span className="text-xs text-gray-700 dark:text-gray-300 font-medium">Live Data</span>
+                        <Activity className="w-3 h-3 text-green-400" />
+                        <span className="text-xs text-gray-700 dark:text-gray-300 font-medium">Updated Data</span>
                       </div>
                     </div>
                     
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-4 border border-blue-100 dark:border-blue-800 hover:scale-105 transition-transform duration-200">
                         <div className="flex items-center space-x-3">
-                          <div className="p-2 bg-blue-500 rounded-lg relative">
+                          <div className="p-2 bg-blue-500 rounded-lg">
                             <User className="h-4 w-4 text-white" />
-                            <div className="absolute -top-1 -right-1 w-2 h-2 bg-blue-400 rounded-full animate-ping"></div>
                           </div>
                           <div>
                             <p className="text-xs text-blue-600 dark:text-blue-400 font-medium uppercase tracking-wider">
@@ -327,9 +308,8 @@ export default function TestResults() {
                       
                       <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-4 border border-green-100 dark:border-green-800 hover:scale-105 transition-transform duration-200">
                         <div className="flex items-center space-x-3">
-                          <div className="p-2 bg-green-500 rounded-lg relative">
+                          <div className="p-2 bg-green-500 rounded-lg">
                             <Award className="h-4 w-4 text-white" />
-                            <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-400 rounded-full animate-ping"></div>
                           </div>
                           <div>
                             <p className="text-xs text-green-600 dark:text-green-400 font-medium uppercase tracking-wider">Students Completed</p>
@@ -345,9 +325,8 @@ export default function TestResults() {
                       
                       <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl p-4 border border-purple-100 dark:border-purple-800 hover:scale-105 transition-transform duration-200">
                         <div className="flex items-center space-x-3">
-                          <div className="p-2 bg-purple-500 rounded-lg relative">
+                          <div className="p-2 bg-purple-500 rounded-lg">
                             <Trophy className="h-4 w-4 text-white" />
-                            <div className="absolute -top-1 -right-1 w-2 h-2 bg-purple-400 rounded-full animate-ping"></div>
                           </div>
                           <div>
                             <p className="text-xs text-purple-600 dark:text-purple-400 font-medium uppercase tracking-wider">Average Score</p>
