@@ -168,13 +168,17 @@ export default function TestResults() {
               <Card className="bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 transition-all duration-300">
                 <CardContent className="p-6 text-center">
                   <div className="relative">
-                    <User className="w-12 h-12 text-blue-400 mx-auto mb-4" />
-                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-400 rounded-full animate-pulse"></div>
+                    <BookOpen className="w-12 h-12 text-blue-400 mx-auto mb-4" />
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-400 rounded-full"></div>
                   </div>
-                  <div className="text-3xl font-bold text-white mb-2 font-mono">{studentsCompleted}</div>
-                  <p className="text-green-100 font-medium">Students Completed</p>
+                  <div className="text-3xl font-bold text-white mb-2 font-mono">
+                    {isAdmin ? studentsCompleted : (testResults?.length || 0)}
+                  </div>
+                  <p className="text-green-100 font-medium">
+                    {isAdmin ? "Students Completed" : "Tests Taken"}
+                  </p>
                   <p className="text-green-200/70 text-sm mt-1">
-                    {isAdmin ? "Have taken tests" : "Including you"}
+                    {isAdmin ? "Have taken tests" : "By you"}
                   </p>
                 </CardContent>
               </Card>
