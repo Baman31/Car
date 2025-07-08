@@ -550,6 +550,29 @@ router.put('/enrollments/:studentId/:courseId/progress', async (req, res) => {
   }
 });
 
+// Public platform stats endpoint (no authentication required)
+router.get('/platform/stats', async (req, res) => {
+  try {
+    // Get total unique students enrolled
+    const activeStudents = await Enrollment.distinct('student');
+    
+    // Get total courses available
+    const totalCourses = await Course.countDocuments();
+    
+    // Calculate average rating from test results (placeholder implementation)
+    const averageRating = 4.8; // This would be calculated from actual ratings
+    
+    res.json({
+      activeStudents: activeStudents.length,
+      totalCourses,
+      averageRating
+    });
+  } catch (error) {
+    console.error('Error fetching platform stats:', error);
+    res.status(500).json({ message: 'Failed to fetch platform stats', error: error.message });
+  }
+});
+
 // User stats - students can only see their own stats
 router.get('/users/:id/stats', filterStudentData, async (req, res) => {
   try {

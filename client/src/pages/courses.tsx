@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Search, Users, BookOpen, TrendingUp, Star, Clock } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -36,6 +36,19 @@ export default function Courses() {
 
   const { data: enrollments, isLoading: enrollmentsLoading } = useQuery<Enrollment[]>({
     queryKey: [`/api/users/${userId}/enrollments`],
+  });
+
+  // Real-time platform statistics
+  const { data: platformStats, isLoading: statsLoading } = useQuery({
+    queryKey: ["/api/mongo/platform/stats"],
+    queryFn: async () => {
+      const response = await fetch("/api/mongo/platform/stats");
+      if (!response.ok) {
+        throw new Error("Failed to fetch platform stats");
+      }
+      return response.json();
+    },
+    refetchInterval: 30000, // Refresh every 30 seconds
   });
 
   const categories = ["All Categories", "Programming", "Data Science", "Mathematics"];
@@ -133,14 +146,32 @@ export default function Courses() {
               <Card className="bg-white/10 backdrop-blur-sm border-white/20">
                 <CardContent className="p-6 text-center">
                   <Users className="w-12 h-12 text-green-400 mx-auto mb-4" />
-                  <h3 className="text-2xl font-bold text-white mb-2">5K+</h3>
+                  <h3 className="text-2xl font-bold text-white mb-2">
+                    {statsLoading ? (
+                      <div className="animate-pulse bg-white/20 h-8 w-16 rounded mx-auto"></div>
+                    ) : (
+                      <span className="relative">
+                        {platformStats?.activeStudents || 0}
+                        <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                      </span>
+                    )}
+                  </h3>
                   <p className="text-blue-100">Active Students</p>
                 </CardContent>
               </Card>
               <Card className="bg-white/10 backdrop-blur-sm border-white/20">
                 <CardContent className="p-6 text-center">
                   <Star className="w-12 h-12 text-purple-400 mx-auto mb-4" />
-                  <h3 className="text-2xl font-bold text-white mb-2">4.8</h3>
+                  <h3 className="text-2xl font-bold text-white mb-2">
+                    {statsLoading ? (
+                      <div className="animate-pulse bg-white/20 h-8 w-12 rounded mx-auto"></div>
+                    ) : (
+                      <span className="relative">
+                        {platformStats?.averageRating || 4.8}
+                        <div className="absolute -top-1 -right-1 w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
+                      </span>
+                    )}
+                  </h3>
                   <p className="text-blue-100">Average Rating</p>
                 </CardContent>
               </Card>
