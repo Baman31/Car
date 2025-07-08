@@ -191,7 +191,7 @@ export default function TestResults() {
                 <CardContent className="p-6 text-center">
                   <div className="relative">
                     <Trophy className="w-12 h-12 text-orange-400 mx-auto mb-4" />
-                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-orange-400 rounded-full animate-pulse"></div>
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-orange-400 rounded-full"></div>
                   </div>
                   <div className="text-3xl font-bold text-white mb-2 font-mono">{averageScore}%</div>
                   <p className="text-green-100 font-medium">Average Score</p>
@@ -205,12 +205,12 @@ export default function TestResults() {
             {/* Manual Refresh Indicator */}
             <div className="mt-8 flex items-center justify-center space-x-3">
               <div className="flex items-center space-x-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 border border-white/20">
-                <Activity className="w-4 h-4 text-green-400" />
+                <Activity className="w-4 h-4 text-blue-400" />
                 <span className="text-white text-sm font-medium">Manual Refresh</span>
-                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
               </div>
               <div className="flex items-center space-x-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 border border-white/20">
-                <RefreshCw className="w-4 h-4 text-blue-400" />
+                <RefreshCw className="w-4 h-4 text-gray-400" />
                 <span className="text-white text-sm font-medium">Click to refresh</span>
               </div>
             </div>
@@ -296,8 +296,8 @@ export default function TestResults() {
                         {selectedCourse === "all" ? "Overall Statistics" : `${selectedCourse} Course Analytics`}
                       </h3>
                       <div className="flex items-center space-x-2 bg-white/20 dark:bg-gray-800/20 rounded-full px-3 py-1">
-                        <Activity className="w-3 h-3 text-green-400" />
-                        <span className="text-xs text-gray-700 dark:text-gray-300 font-medium">Updated Data</span>
+                        <Activity className="w-3 h-3 text-blue-400" />
+                        <span className="text-xs text-gray-700 dark:text-gray-300 font-medium">Manual Refresh</span>
                       </div>
                     </div>
                     

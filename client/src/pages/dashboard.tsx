@@ -173,11 +173,11 @@ export default function Dashboard() {
                     </div>
                   </div>
                   
-                  {/* Live Data Indicator & Actions */}
+                  {/* Manual Refresh Indicator & Actions */}
                   <div className="flex items-center space-x-4">
-                    <div className="flex items-center space-x-2 bg-green-50 dark:bg-green-900/20 px-4 py-2 rounded-xl border border-green-200 dark:border-green-800">
-                      <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
-                      <span className="text-green-800 dark:text-green-200 text-sm font-medium">Live Data</span>
+                    <div className="flex items-center space-x-2 bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-xl border border-blue-200 dark:border-blue-800">
+                      <div className="w-3 h-3 bg-blue-500 rounded-full" />
+                      <span className="text-blue-800 dark:text-blue-200 text-sm font-medium">Manual Refresh</span>
                     </div>
                     <Button 
                       variant="outline" 
@@ -201,7 +201,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Real-time Dashboard Metrics */}
+          {/* Manual Dashboard Metrics */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {user?.role === 'admin' ? (
               <>
@@ -287,7 +287,7 @@ export default function Dashboard() {
                 <Card className="border-l-4 border-l-blue-500 hover:shadow-lg transition-shadow duration-300 relative">
                   <CardContent className="p-6">
                     <div className="absolute top-2 right-2">
-                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                      <div className="w-2 h-2 bg-blue-500 rounded-full " />
                     </div>
                     <div className="flex items-center justify-between">
                   <div>
@@ -311,7 +311,7 @@ export default function Dashboard() {
             <Card className="border-l-4 border-l-green-500 hover:shadow-lg transition-shadow duration-300 relative">
               <CardContent className="p-6">
                 <div className="absolute top-2 right-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                  <div className="w-2 h-2 bg-blue-500 rounded-full " />
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
@@ -335,7 +335,7 @@ export default function Dashboard() {
             <Card className="border-l-4 border-l-purple-500 hover:shadow-lg transition-shadow duration-300 relative">
               <CardContent className="p-6">
                 <div className="absolute top-2 right-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                  <div className="w-2 h-2 bg-blue-500 rounded-full " />
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
@@ -359,7 +359,7 @@ export default function Dashboard() {
             <Card className="border-l-4 border-l-orange-500 hover:shadow-lg transition-shadow duration-300 relative">
               <CardContent className="p-6">
                 <div className="absolute top-2 right-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                  <div className="w-2 h-2 bg-blue-500 rounded-full " />
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
@@ -369,7 +369,7 @@ export default function Dashboard() {
                     </p>
                     <p className="text-xs text-orange-600 dark:text-orange-400 flex items-center mt-1">
                       <Activity className="w-3 h-3 mr-1" />
-                      Real-time tracking
+                      Manual tracking
                     </p>
                   </div>
                   <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-xl flex items-center justify-center">
@@ -396,9 +396,9 @@ export default function Dashboard() {
                           <BarChart3 className="w-5 h-5 text-blue-600" />
                           <span>Student Progress Overview</span>
                         </CardTitle>
-                        <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400 flex items-center space-x-1">
-                          <Zap className="w-3 h-3 mr-1" />
-                          Live
+                        <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400 flex items-center space-x-1">
+                          <RefreshCw className="w-3 h-3 mr-1" />
+                          Manual
                         </Badge>
                       </div>
                     </CardHeader>
@@ -500,8 +500,8 @@ export default function Dashboard() {
                       <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Track your learning journey</p>
                     </div>
                     <Badge className="bg-blue-100 text-blue-800 border-blue-300">
-                      <Zap className="w-3 h-3 mr-1" />
-                      Live
+                      <RefreshCw className="w-3 h-3 mr-1" />
+                      Manual
                     </Badge>
                   </div>
                 </CardHeader>
@@ -717,16 +717,16 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Real-time Update Status */}
+          {/* Manual Refresh Status */}
           <div className="mt-8 flex items-center justify-center space-x-4">
             <div className="flex items-center space-x-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 border border-gray-200 dark:border-gray-700">
-              <Activity className="w-4 h-4 text-green-500 animate-pulse" />
-              <span className="text-gray-700 dark:text-gray-300 text-sm font-medium">Live Dashboard</span>
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-ping"></div>
+              <Activity className="w-4 h-4 text-blue-500" />
+              <span className="text-gray-700 dark:text-gray-300 text-sm font-medium">Manual Refresh</span>
+              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
             </div>
             <div className="flex items-center space-x-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 border border-gray-200 dark:border-gray-700">
-              <RefreshCw className="w-4 h-4 text-blue-500 animate-spin" />
-              <span className="text-gray-700 dark:text-gray-300 text-sm font-medium">Auto-refresh: 3s</span>
+              <RefreshCw className="w-4 h-4 text-gray-500" />
+              <span className="text-gray-700 dark:text-gray-300 text-sm font-medium">Click to refresh</span>
             </div>
           </div>
         </div>
