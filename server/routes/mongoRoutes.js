@@ -1082,7 +1082,7 @@ router.post('/student/sync-enrollments', verifyToken, async (req, res) => {
   }
 });
 
-// Get all students with their test results for admin (only for enrolled courses)
+// Get all students with their test results for admin (shows all students who have given tests)
 router.get('/admin/student-results', verifyToken, requireAdmin, async (req, res) => {
   try {
     const students = await User.find({ role: 'student', isActive: true })
@@ -1095,34 +1095,24 @@ router.get('/admin/student-results', verifyToken, requireAdmin, async (req, res)
     const studentResults = [];
     
     for (const student of students) {
-      // Get student's enrolled courses from both enrollment collections and user's enrolledCourses array
-      const enrollments = await Enrollment.find({ student: student._id }).select('course');
-      const enrollmentCourseIds = enrollments.map(e => e.course.toString());
-      const userEnrolledCourses = student.enrolledCourses || [];
-      const allEnrolledCourseIds = [...enrollmentCourseIds, ...userEnrolledCourses.map(id => id.toString())];
+      // Get all test results for this student (not filtered by enrollment)
+      const testResults = tests.map(test => {
+        const result = test.results.find(
+          r => r.student.toString() === student._id.toString()
+        );
+        
+        return {
+          testId: test._id,
+          testTitle: test.title,
+          course: test.course,
+          maxScore: test.maxScore,
+          result: result || null
+        };
+      });
       
-      // Remove duplicates
-      const uniqueEnrolledCourseIds = [...new Set(allEnrolledCourseIds)];
-      
-      // Only include test results for courses the student is enrolled in
-      const testResults = tests
-        .filter(test => uniqueEnrolledCourseIds.includes(test.course._id.toString()))
-        .map(test => {
-          const result = test.results.find(
-            r => r.student.toString() === student._id.toString()
-          );
-          
-          return {
-            testId: test._id,
-            testTitle: test.title,
-            course: test.course,
-            maxScore: test.maxScore,
-            result: result || null
-          };
-        });
-      
-      // Only include students who are enrolled in at least one course
-      if (testResults.length > 0) {
+      // Only include students who have taken at least one test (have actual results)
+      const completedTests = testResults.filter(test => test.result !== null);
+      if (completedTests.length > 0) {
         studentResults.push({
           student,
           testResults

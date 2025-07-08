@@ -126,12 +126,12 @@ Preferred communication style: Simple, everyday language.
 ## Recent Changes
 
 - **July 08, 2025**: Enrollment-Based Test Result Filtering Complete & Duration Fields Removed
-  - **Enrollment-Based Test Result Filtering**: Updated test results to only show courses where students are enrolled:
-    - Modified `/api/mongo/student/my-results` endpoint to filter tests based on student's enrolled courses
-    - Updated `/api/mongo/admin/student-results` endpoint to only show test results for courses where students are enrolled
-    - Backend now checks both Enrollment collection and user's enrolledCourses array for comprehensive enrollment tracking
-    - Students can only see test results for courses they're actually enrolled in, improving data relevance
-    - Admin view now shows only students who are enrolled in at least one course with test data
+  - **Test Result Filtering Updated**: Enhanced test results display for better data management:
+    - Modified `/api/mongo/student/my-results` endpoint to filter tests based on student's enrolled courses (students only see enrolled course tests)
+    - Updated `/api/mongo/admin/student-results` endpoint to show ALL students who have taken tests, regardless of enrollment status
+    - Backend now checks both Enrollment collection and user's enrolledCourses array for student view filtering
+    - Student view: Students can only see test results for courses they're actually enrolled in, improving data relevance
+    - Admin view: Shows all students who have completed at least one test, providing comprehensive test result oversight
   - **Duration Field Removal Complete**: Replaced duration fields with PDF notes count throughout the application:
     - Removed duration input field from course creation and edit forms
     - Updated course cards to display PDF notes count instead of duration
