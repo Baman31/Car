@@ -1,16 +1,23 @@
 import { useParams, Link } from "wouter";
-import { useQuery } from "@tanstack/react-query";
-import { X, Play, Clock, Youtube, BookOpen } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { X, Play, Clock, Youtube, BookOpen, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import PdfViewer from "@/components/pdf-viewer";
 import { Skeleton } from "@/components/ui/skeleton";
 import Sidebar from "@/components/sidebar";
 import type { Course, CourseModule, CourseNote } from "@shared/schema";
+import { useAuth } from "@/hooks/useAuth";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export default function CourseDetail() {
   const { id } = useParams();
   const courseId = id || "";
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: course, isLoading: courseLoading, error } = useQuery<any>({
     queryKey: [`/api/mongo/courses/${courseId}`],
@@ -28,6 +35,46 @@ export default function CourseDetail() {
     },
     enabled: !!courseId,
   });
+
+  // Module completion mutation
+  const completionMutation = useMutation({
+    mutationFn: async ({ moduleId, isCompleted }: { moduleId: string; isCompleted: boolean }) => {
+      const method = isCompleted ? 'POST' : 'DELETE';
+      return await apiRequest(method, `/api/mongo/courses/${courseId}/modules/${moduleId}/complete`, {});
+    },
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: [`/api/mongo/courses/${courseId}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/mongo/student/enrollments"] });
+      
+      toast({
+        title: variables.isCompleted ? "Module Completed" : "Module Uncompleted",
+        description: variables.isCompleted ? "Great job! Keep up the progress." : "Module marked as incomplete.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update module completion",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Helper function to check if module is completed
+  const isModuleCompleted = (module: any) => {
+    if (!user?.id || !module?.completedBy) return false;
+    return module.completedBy.some((completion: any) => 
+      completion.userId === user.id
+    );
+  };
+
+  // Handle module completion toggle
+  const handleModuleToggle = (moduleId: string, currentlyCompleted: boolean) => {
+    completionMutation.mutate({ 
+      moduleId, 
+      isCompleted: !currentlyCompleted 
+    });
+  };
 
   // For MongoDB structure, modules and notes are embedded in the course document
   const modules = course?.modules || [];
@@ -150,50 +197,82 @@ export default function CourseDetail() {
                 </div>
                 {modules?.length > 0 ? (
                   <div className="space-y-4">
-                    {modules.map((module: any, index: number) => (
-                      <Link key={module._id || index} href={`/video/${courseId}/${module._id}`}>
-                        <Card className="cursor-pointer hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 bg-gradient-to-r from-white via-blue-50/30 to-purple-50/30 border-l-4 border-gradient-to-b from-blue-500 to-purple-500 group overflow-hidden">
-                          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-purple-500/0 to-pink-500/0 group-hover:from-blue-500/5 group-hover:via-purple-500/5 group-hover:to-pink-500/5 transition-all duration-500"></div>
-                          <CardContent className="p-6 relative">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center space-x-6">
-                                <div className="flex-shrink-0">
-                                  <div className="w-16 h-16 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                                    <Play className="h-8 w-8 text-white" />
-                                  </div>
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <h4 className="text-xl font-bold text-gray-900 truncate mb-2 group-hover:text-blue-700 transition-colors">
-                                    {index + 1}. {module.title}
-                                  </h4>
-                                  {module.description && (
-                                    <p className="text-sm text-gray-600 truncate mb-3">
-                                      {module.description}
-                                    </p>
-                                  )}
-                                  <div className="flex items-center text-sm text-gray-500 space-x-4">
-                                    <div className="flex items-center bg-blue-100 rounded-full px-3 py-1">
-                                      <Clock className="h-4 w-4 mr-1 text-blue-600" />
-                                      <span className="font-medium text-blue-700">{module.duration} min</span>
-                                    </div>
-                                    <div className="flex items-center bg-red-100 rounded-full px-3 py-1">
-                                      <Youtube className="h-4 w-4 mr-1 text-red-600" />
-                                      <span className="font-medium text-red-700">HD Video</span>
+                    {modules.map((module: any, index: number) => {
+                      const isCompleted = isModuleCompleted(module);
+                      return (
+                        <div key={module._id || index} className="relative">
+                          <Card className={`hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 bg-gradient-to-r from-white via-blue-50/30 to-purple-50/30 border-l-4 ${isCompleted ? 'border-green-500' : 'border-gradient-to-b from-blue-500 to-purple-500'} group overflow-hidden`}>
+                            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-purple-500/0 to-pink-500/0 group-hover:from-blue-500/5 group-hover:via-purple-500/5 group-hover:to-pink-500/5 transition-all duration-500"></div>
+                            <CardContent className="p-6 relative">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center space-x-6">
+                                  <div className="flex-shrink-0">
+                                    <div className={`w-16 h-16 ${isCompleted ? 'bg-gradient-to-br from-green-500 via-green-600 to-green-700' : 'bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500'} rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                                      {isCompleted ? (
+                                        <Check className="h-8 w-8 text-white" />
+                                      ) : (
+                                        <Play className="h-8 w-8 text-white" />
+                                      )}
                                     </div>
                                   </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-3 mb-2">
+                                      <h4 className="text-xl font-bold text-gray-900 truncate group-hover:text-blue-700 transition-colors">
+                                        {index + 1}. {module.title}
+                                      </h4>
+                                      {isCompleted && (
+                                        <div className="flex items-center gap-1 bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">
+                                          <Check className="h-3 w-3" />
+                                          Completed
+                                        </div>
+                                      )}
+                                    </div>
+                                    {module.description && (
+                                      <p className="text-sm text-gray-600 truncate mb-3">
+                                        {module.description}
+                                      </p>
+                                    )}
+                                    <div className="flex items-center text-sm text-gray-500 space-x-4">
+                                      <div className="flex items-center bg-blue-100 rounded-full px-3 py-1">
+                                        <Clock className="h-4 w-4 mr-1 text-blue-600" />
+                                        <span className="font-medium text-blue-700">{module.duration} min</span>
+                                      </div>
+                                      <div className="flex items-center bg-red-100 rounded-full px-3 py-1">
+                                        <Youtube className="h-4 w-4 mr-1 text-red-600" />
+                                        <span className="font-medium text-red-700">HD Video</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="flex-shrink-0 flex items-center gap-3">
+                                  <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                      id={`module-${module._id}`}
+                                      checked={isCompleted}
+                                      onCheckedChange={(checked) => handleModuleToggle(module._id, isCompleted)}
+                                      disabled={completionMutation.isPending}
+                                      className="data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
+                                    />
+                                    <label 
+                                      htmlFor={`module-${module._id}`} 
+                                      className="text-sm font-medium text-gray-700 cursor-pointer select-none"
+                                    >
+                                      {isCompleted ? 'Completed' : 'Mark Complete'}
+                                    </label>
+                                  </div>
+                                  <Link href={`/video/${courseId}/${module._id}`}>
+                                    <Button variant="outline" size="lg" className="bg-gradient-to-r from-blue-500 to-purple-500 text-white border-none hover:from-blue-600 hover:to-purple-600 hover:scale-105 transition-all duration-300 shadow-lg">
+                                      <Play className="h-5 w-5 mr-2" />
+                                      Watch Now
+                                    </Button>
+                                  </Link>
                                 </div>
                               </div>
-                              <div className="flex-shrink-0">
-                                <Button variant="outline" size="lg" className="bg-gradient-to-r from-blue-500 to-purple-500 text-white border-none hover:from-blue-600 hover:to-purple-600 hover:scale-105 transition-all duration-300 shadow-lg">
-                                  <Play className="h-5 w-5 mr-2" />
-                                  Watch Now
-                                </Button>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </Link>
-                    ))}
+                            </CardContent>
+                          </Card>
+                        </div>
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="text-center py-12 bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 rounded-2xl border-2 border-dashed border-gray-300">

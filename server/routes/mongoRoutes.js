@@ -1395,6 +1395,162 @@ router.put('/admin/users/:id/courses', verifyToken, requireAdmin, async (req, re
   }
 });
 
+// Module completion routes
+router.post('/courses/:courseId/modules/:moduleId/complete', verifyToken, async (req, res) => {
+  try {
+    const { courseId, moduleId } = req.params;
+    const userId = req.user.id;
+
+    // Find the course and module
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    const module = course.modules.id(moduleId);
+    if (!module) {
+      return res.status(404).json({ message: 'Module not found' });
+    }
+
+    // Check if user is enrolled in the course
+    const enrollment = await Enrollment.findOne({
+      student: userId,
+      course: courseId
+    });
+    
+    if (!enrollment) {
+      return res.status(403).json({ message: 'Not enrolled in this course' });
+    }
+
+    // Check if module is already completed by this user
+    const isCompleted = module.completedBy.some(completion => 
+      completion.userId.toString() === userId
+    );
+
+    if (isCompleted) {
+      return res.status(400).json({ message: 'Module already completed' });
+    }
+
+    // Mark module as completed
+    module.completedBy.push({
+      userId: userId,
+      completedAt: new Date()
+    });
+
+    // Add module to enrollment's completed modules if not already there
+    if (!enrollment.completedModules.includes(moduleId)) {
+      enrollment.completedModules.push(moduleId);
+    }
+
+    // Update enrollment progress
+    const totalModules = course.modules.length;
+    const completedModules = enrollment.completedModules.length;
+    enrollment.progress = Math.round((completedModules / totalModules) * 100);
+
+    await course.save();
+    await enrollment.save();
+
+    res.json({ 
+      message: 'Module marked as completed',
+      progress: enrollment.progress,
+      isCompleted: true
+    });
+
+  } catch (error) {
+    console.error('Error completing module:', error);
+    res.status(500).json({ message: 'Failed to complete module', error: error.message });
+  }
+});
+
+router.delete('/courses/:courseId/modules/:moduleId/complete', verifyToken, async (req, res) => {
+  try {
+    const { courseId, moduleId } = req.params;
+    const userId = req.user.id;
+
+    // Find the course and module
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    const module = course.modules.id(moduleId);
+    if (!module) {
+      return res.status(404).json({ message: 'Module not found' });
+    }
+
+    // Check if user is enrolled in the course
+    const enrollment = await Enrollment.findOne({
+      student: userId,
+      course: courseId
+    });
+    
+    if (!enrollment) {
+      return res.status(403).json({ message: 'Not enrolled in this course' });
+    }
+
+    // Remove completion record
+    module.completedBy = module.completedBy.filter(completion => 
+      completion.userId.toString() !== userId
+    );
+
+    // Remove module from enrollment's completed modules
+    enrollment.completedModules = enrollment.completedModules.filter(
+      id => id.toString() !== moduleId
+    );
+
+    // Update enrollment progress
+    const totalModules = course.modules.length;
+    const completedModules = enrollment.completedModules.length;
+    enrollment.progress = Math.round((completedModules / totalModules) * 100);
+
+    await course.save();
+    await enrollment.save();
+
+    res.json({ 
+      message: 'Module completion removed',
+      progress: enrollment.progress,
+      isCompleted: false
+    });
+
+  } catch (error) {
+    console.error('Error uncompleting module:', error);
+    res.status(500).json({ message: 'Failed to uncomplete module', error: error.message });
+  }
+});
+
+// Get module completion status for a user
+router.get('/courses/:courseId/modules/:moduleId/completion', verifyToken, async (req, res) => {
+  try {
+    const { courseId, moduleId } = req.params;
+    const userId = req.user.id;
+
+    // Find the course and module
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    const module = course.modules.id(moduleId);
+    if (!module) {
+      return res.status(404).json({ message: 'Module not found' });
+    }
+
+    // Check if module is completed by this user
+    const completion = module.completedBy.find(completion => 
+      completion.userId.toString() === userId
+    );
+
+    res.json({
+      isCompleted: !!completion,
+      completedAt: completion?.completedAt || null
+    });
+
+  } catch (error) {
+    console.error('Error getting module completion:', error);
+    res.status(500).json({ message: 'Failed to get module completion', error: error.message });
+  }
+});
+
 // Use auth routes
 router.use('/auth', authRoutes);
 

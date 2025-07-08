@@ -1,18 +1,65 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRoute, Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Play, Clock, BookOpen } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ArrowLeft, Play, Clock, BookOpen, Check } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import Sidebar from "@/components/sidebar";
+import { useAuth } from "@/hooks/useAuth";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export default function VideoPlayer() {
   const [match, params] = useRoute("/video/:courseId/:moduleId");
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   
   const { data: course, isLoading } = useQuery<any>({
     queryKey: [`/api/mongo/courses/${params?.courseId}`],
     enabled: !!params?.courseId,
   });
+
+  // Module completion mutation
+  const completionMutation = useMutation({
+    mutationFn: async ({ moduleId, isCompleted }: { moduleId: string; isCompleted: boolean }) => {
+      const method = isCompleted ? 'POST' : 'DELETE';
+      return await apiRequest(method, `/api/mongo/courses/${params?.courseId}/modules/${moduleId}/complete`, {});
+    },
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: [`/api/mongo/courses/${params?.courseId}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/mongo/student/enrollments"] });
+      
+      toast({
+        title: variables.isCompleted ? "Module Completed" : "Module Uncompleted",
+        description: variables.isCompleted ? "Great job! Keep up the progress." : "Module marked as incomplete.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update module completion",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Helper function to check if module is completed
+  const isModuleCompleted = (module: any) => {
+    if (!user?.id || !module?.completedBy) return false;
+    return module.completedBy.some((completion: any) => 
+      completion.userId === user.id
+    );
+  };
+
+  // Handle module completion toggle
+  const handleModuleToggle = (moduleId: string, currentlyCompleted: boolean) => {
+    completionMutation.mutate({ 
+      moduleId, 
+      isCompleted: !currentlyCompleted 
+    });
+  };
 
   if (!match || !params) {
     return (
@@ -126,13 +173,36 @@ export default function VideoPlayer() {
                 )}
                 
                 <div className="p-6">
-                  <h1 className="text-2xl font-bold text-gray-900 mb-2">{module.title}</h1>
+                  <div className="flex items-center justify-between mb-4">
+                    <h1 className="text-2xl font-bold text-gray-900">{module.title}</h1>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`module-completion-${module._id}`}
+                        checked={isModuleCompleted(module)}
+                        onCheckedChange={(checked) => handleModuleToggle(module._id, isModuleCompleted(module))}
+                        disabled={completionMutation.isPending}
+                        className="data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
+                      />
+                      <label 
+                        htmlFor={`module-completion-${module._id}`} 
+                        className="text-sm font-medium text-gray-700 cursor-pointer select-none"
+                      >
+                        {isModuleCompleted(module) ? 'Completed' : 'Mark Complete'}
+                      </label>
+                    </div>
+                  </div>
                   {module.description && (
                     <p className="text-gray-600 mb-4">{module.description}</p>
                   )}
                   <div className="flex items-center text-sm text-gray-500">
                     <Clock className="h-4 w-4 mr-1" />
                     <span>{module.duration} minutes</span>
+                    {isModuleCompleted(module) && (
+                      <div className="flex items-center ml-4 bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">
+                        <Check className="h-3 w-3 mr-1" />
+                        Completed
+                      </div>
+                    )}
                   </div>
                 </div>
               </CardContent>
@@ -151,35 +221,50 @@ export default function VideoPlayer() {
               <CardContent>
                 <h3 className="font-semibold text-gray-900 mb-4">{course?.title}</h3>
                 <div className="space-y-2">
-                  {course?.modules?.map((mod: any, index: number) => (
-                    <Link
-                      key={mod._id}
-                      href={`/video/${params.courseId}/${mod._id}`}
-                    >
-                      <div
-                        className={`p-3 rounded-lg border cursor-pointer transition-colors ${
-                          mod._id === params.moduleId
-                            ? 'bg-blue-50 border-blue-200'
-                            : 'bg-white border-gray-200 hover:bg-gray-50'
-                        }`}
+                  {course?.modules?.map((mod: any, index: number) => {
+                    const isCompleted = isModuleCompleted(mod);
+                    return (
+                      <Link
+                        key={mod._id}
+                        href={`/video/${params.courseId}/${mod._id}`}
                       >
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <p className="text-sm font-medium text-gray-900 truncate">
-                              {index + 1}. {mod.title}
-                            </p>
-                            <div className="flex items-center text-xs text-gray-500 mt-1">
-                              <Clock className="h-3 w-3 mr-1" />
-                              {mod.duration} min
+                        <div
+                          className={`p-3 rounded-lg border cursor-pointer transition-colors ${
+                            mod._id === params.moduleId
+                              ? 'bg-blue-50 border-blue-200'
+                              : isCompleted 
+                                ? 'bg-green-50 border-green-200 hover:bg-green-100'
+                                : 'bg-white border-gray-200 hover:bg-gray-50'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <p className="text-sm font-medium text-gray-900 truncate">
+                                  {index + 1}. {mod.title}
+                                </p>
+                                {isCompleted && (
+                                  <div className="flex-shrink-0 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                                    <Check className="h-3 w-3 text-white" />
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex items-center text-xs text-gray-500 mt-1">
+                                <Clock className="h-3 w-3 mr-1" />
+                                {mod.duration} min
+                                {isCompleted && (
+                                  <span className="ml-2 text-green-600 font-medium">• Completed</span>
+                                )}
+                              </div>
                             </div>
+                            {mod._id === params.moduleId && (
+                              <Play className="h-4 w-4 text-blue-600" />
+                            )}
                           </div>
-                          {mod._id === params.moduleId && (
-                            <Play className="h-4 w-4 text-blue-600" />
-                          )}
                         </div>
-                      </div>
-                    </Link>
-                  ))}
+                      </Link>
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
