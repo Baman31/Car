@@ -37,57 +37,77 @@ export default function Dashboard() {
 
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: [`/api/users/${userId}/stats`],
+    enabled: !!userId,
+    refetchInterval: 3000, // Refresh every 3 seconds
   });
 
   const { data: activities, isLoading: activitiesLoading } = useQuery<RecentActivity[]>({
     queryKey: [`/api/users/${userId}/activities`],
+    enabled: !!userId,
+    refetchInterval: 3000, // Refresh every 3 seconds
   });
 
   // Real-time data queries for student dashboard
   const { data: enrollments, isLoading: enrollmentsLoading } = useQuery<any[]>({
     queryKey: [`/api/users/${userId}/enrollments`],
+    enabled: !!userId,
+    refetchInterval: 3000, // Refresh every 3 seconds
   });
 
   const { data: courses, isLoading: coursesLoading } = useQuery<any[]>({
     queryKey: ["/api/mongo/courses"],
+    enabled: !!userId,
+    refetchInterval: 3000, // Refresh every 3 seconds
   });
 
   const { data: studentResults, isLoading: resultsLoading } = useQuery<any[]>({
     queryKey: ["/api/mongo/student/my-results"],
     enabled: !!userId && user?.role === 'student',
+    refetchInterval: 3000, // Refresh every 3 seconds
   });
 
-  // Real-time dashboard refresh
+  // Get user dashboard stats for real-time updates
+  const { data: dashboardStats, isLoading: dashboardStatsLoading } = useQuery({
+    queryKey: ["/api/mongo/user/stats"],
+    enabled: !!userId,
+    refetchInterval: 3000, // Refresh every 3 seconds
+  });
+
+  // Real-time dashboard refresh with 3-second intervals
   useEffect(() => {
+    if (!userId) return;
+    
     const interval = setInterval(() => {
       queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}/stats`] });
       queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}/enrollments`] });
       queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}/activities`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/mongo/courses"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/mongo/user/stats"] });
       if (user?.role === 'student') {
         queryClient.invalidateQueries({ queryKey: ["/api/mongo/student/my-results"] });
       }
-    }, 30000); // Refresh every 30 seconds
+    }, 3000); // Refresh every 3 seconds for real-time updates
 
     return () => clearInterval(interval);
   }, [queryClient, userId, user?.role]);
 
-  // Calculate enhanced dashboard metrics
+  // Calculate enhanced dashboard metrics with real-time updates
   const dashboardData = {
     // Enrollment metrics
     totalEnrolled: enrollments?.length || 0,
     completedCourses: enrollments?.filter(e => (e.progress || 0) >= 100)?.length || 0,
     inProgressCourses: enrollments?.filter(e => (e.progress || 0) > 0 && (e.progress || 0) < 100)?.length || 0,
     
-    // Performance metrics
+    // Performance metrics with synchronized normalized scoring
     totalTests: studentResults?.reduce((acc, course) => acc + (course.testResults?.length || 0), 0) || 0,
-    averageScore: studentResults?.length ? 
+    averageScore: dashboardStats?.averageScore || (studentResults?.length ? 
       Math.round(
         studentResults.reduce((acc, course) => {
           const courseAvg = course.testResults?.length ? 
-            course.testResults.reduce((sum: number, test: any) => sum + (test.score || 0), 0) / course.testResults.length : 0;
+            course.testResults.reduce((sum: number, test: any) => sum + ((test.score || 0) / (test.maxScore || 100) * 100), 0) / course.testResults.length : 0;
           return acc + courseAvg;
         }, 0) / studentResults.length
-      ) : 0,
+      ) : 0),
     
     // Progress tracking
     overallProgress: enrollments?.length ? 
@@ -195,8 +215,11 @@ export default function Dashboard() {
           {/* Real-time Dashboard Metrics */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* Enrolled Courses */}
-            <Card className="border-l-4 border-l-blue-500 hover:shadow-lg transition-shadow duration-300">
+            <Card className="border-l-4 border-l-blue-500 hover:shadow-lg transition-shadow duration-300 relative">
               <CardContent className="p-6">
+                <div className="absolute top-2 right-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                </div>
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Enrolled Courses</p>
@@ -216,8 +239,11 @@ export default function Dashboard() {
             </Card>
 
             {/* Completed Courses */}
-            <Card className="border-l-4 border-l-green-500 hover:shadow-lg transition-shadow duration-300">
+            <Card className="border-l-4 border-l-green-500 hover:shadow-lg transition-shadow duration-300 relative">
               <CardContent className="p-6">
+                <div className="absolute top-2 right-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                </div>
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Completed</p>
@@ -237,8 +263,11 @@ export default function Dashboard() {
             </Card>
 
             {/* Test Performance */}
-            <Card className="border-l-4 border-l-purple-500 hover:shadow-lg transition-shadow duration-300">
+            <Card className="border-l-4 border-l-purple-500 hover:shadow-lg transition-shadow duration-300 relative">
               <CardContent className="p-6">
+                <div className="absolute top-2 right-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                </div>
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Test Score Avg</p>
@@ -258,15 +287,21 @@ export default function Dashboard() {
             </Card>
 
             {/* Overall Progress */}
-            <Card className="border-l-4 border-l-orange-500 hover:shadow-lg transition-shadow duration-300">
+            <Card className="border-l-4 border-l-orange-500 hover:shadow-lg transition-shadow duration-300 relative">
               <CardContent className="p-6">
+                <div className="absolute top-2 right-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                </div>
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Overall Progress</p>
                     <p className="text-3xl font-bold text-gray-900 dark:text-white">
                       {dashboardData.overallProgress}%
                     </p>
-                    
+                    <p className="text-xs text-orange-600 dark:text-orange-400 flex items-center mt-1">
+                      <Activity className="w-3 h-3 mr-1" />
+                      Real-time tracking
+                    </p>
                   </div>
                   <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-xl flex items-center justify-center">
                     <BarChart3 className="w-6 h-6 text-orange-600" />
@@ -461,6 +496,19 @@ export default function Dashboard() {
                   </p>
                 </CardContent>
               </Card>
+            </div>
+          </div>
+
+          {/* Real-time Update Status */}
+          <div className="mt-8 flex items-center justify-center space-x-4">
+            <div className="flex items-center space-x-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 border border-gray-200 dark:border-gray-700">
+              <Activity className="w-4 h-4 text-green-500 animate-pulse" />
+              <span className="text-gray-700 dark:text-gray-300 text-sm font-medium">Live Dashboard</span>
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-ping"></div>
+            </div>
+            <div className="flex items-center space-x-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 border border-gray-200 dark:border-gray-700">
+              <RefreshCw className="w-4 h-4 text-blue-500 animate-spin" />
+              <span className="text-gray-700 dark:text-gray-300 text-sm font-medium">Auto-refresh: 3s</span>
             </div>
           </div>
         </div>
