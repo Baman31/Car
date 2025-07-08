@@ -76,7 +76,7 @@ export default function TestResults() {
   );
 
   // Filter data based on selected course for real-time course-specific analytics
-  const filteredTestResults = testResults?.map((student: any) => {
+  const filteredTestResults = isAdmin ? testResults?.map((student: any) => {
     if (selectedCourse === "all") return student;
     
     return {
@@ -87,7 +87,12 @@ export default function TestResults() {
     };
   }).filter((student: any) => 
     selectedCourse === "all" || student.testResults?.length > 0
-  );
+  ) : null;
+
+  // Filter student results for non-admin users
+  const filteredStudentResults = !isAdmin ? testResults?.filter((result: any) => 
+    selectedCourse === "all" || result.course?.title === selectedCourse
+  ) : null;
 
   // Calculate comprehensive real-time statistics based on selected course
   const totalTests = isAdmin 
@@ -100,14 +105,14 @@ export default function TestResults() {
             )
           )
         ).length || 0)
-    : testResults?.length || 0;
+    : filteredStudentResults?.length || 0;
   
   // Total unique students who have completed at least one test in selected course
   const studentsCompleted = isAdmin && filteredTestResults ? new Set(
     filteredTestResults.filter((student: any) => 
       student.testResults?.some((t: any) => t.result)
     ).map((student: any) => student.student._id)
-  ).size : (testResults?.length || 0) > 0 ? 1 : 0;
+  ).size : (filteredStudentResults?.length || 0) > 0 ? 1 : 0;
   
   // Total students enrolled in the selected course (or all courses)
   const totalStudentsInCourse = isAdmin && filteredTestResults ? filteredTestResults.length : 0;
@@ -121,9 +126,9 @@ export default function TestResults() {
         return scores.concat(studentScores);
       }, []);
       return allScores.length > 0 ? Math.round(allScores.reduce((sum, score) => sum + score, 0) / allScores.length) : 0;
-    } else if (!isAdmin && testResults) {
-      // Student view: calculate average from their own results
-      const studentScores = testResults.map((result: any) => (result.score / result.maxScore) * 100);
+    } else if (!isAdmin && filteredStudentResults) {
+      // Student view: calculate average from their own filtered results
+      const studentScores = filteredStudentResults.map((result: any) => (result.score / result.maxScore) * 100);
       return studentScores.length > 0 ? Math.round(studentScores.reduce((sum, score) => sum + score, 0) / studentScores.length) : 0;
     }
     return 0;
@@ -552,11 +557,16 @@ export default function TestResults() {
               <CardTitle className="text-lg flex items-center gap-2">
                 <Award className="h-5 w-5" />
                 My Test Results
+                {selectedCourse !== "all" && (
+                  <Badge variant="secondary" className="ml-2">
+                    {selectedCourse}
+                  </Badge>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {testResults?.map((result: any) => (
+                {filteredStudentResults?.map((result: any) => (
                   <div 
                     key={result.testId} 
                     className="p-4 rounded-lg border border-green-200 bg-green-50"
@@ -593,7 +603,12 @@ export default function TestResults() {
                 )) || (
                   <div className="text-center py-8 text-gray-500">
                     <BookOpen className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    <p>No test results available</p>
+                    <p>
+                      {selectedCourse === "all" 
+                        ? "No test results available" 
+                        : `No test results found for ${selectedCourse}`
+                      }
+                    </p>
                   </div>
                 )}
               </div>
