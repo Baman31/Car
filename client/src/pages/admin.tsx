@@ -679,7 +679,7 @@ export default function Admin() {
                                 <div className="text-right">
                                   <p className="font-bold text-gray-900 dark:text-white">
                                     {student.testResults?.length ? 
-                                      Math.round(student.testResults.reduce((sum, test) => sum + (test.score || 0), 0) / student.testResults.length) 
+                                      Math.round(student.testResults.reduce((sum, test) => sum + ((test.score || 0) / (test.maxScore || 100) * 100), 0) / student.testResults.length) 
                                       : 0}%
                                   </p>
                                 </div>

@@ -379,7 +379,7 @@ export default function Dashboard() {
                             <div className="text-right">
                               <p className="font-bold text-gray-900 dark:text-white">
                                 {courseResult.testResults?.length ? 
-                                  Math.round(courseResult.testResults.reduce((sum: number, test: any) => sum + (test.score || 0), 0) / courseResult.testResults.length) 
+                                  Math.round(courseResult.testResults.reduce((sum: number, test: any) => sum + ((test.score || 0) / (test.maxScore || 100) * 100), 0) / courseResult.testResults.length) 
                                   : 0}%
                               </p>
                               <p className="text-xs text-purple-600 dark:text-purple-400">
