@@ -228,9 +228,9 @@ export default function CourseDetail() {
                                       )}
                                     </div>
                                     {module.description && (
-                                      <p className="text-sm text-gray-600 truncate mb-3">
+                                      <div className="text-sm text-gray-600 truncate mb-3">
                                         {module.description}
-                                      </p>
+                                      </div>
                                     )}
                                     <div className="flex items-center text-sm text-gray-500 space-x-4">
                                       <div className="flex items-center bg-blue-100 rounded-full px-3 py-1">
