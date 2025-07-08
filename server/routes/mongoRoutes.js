@@ -37,7 +37,8 @@ const verifyToken = async (req, res, next) => {
   
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    const user = await User.findById(decoded.id).select('-password');
+    const userId = decoded.userId || decoded.id; // Support both formats
+    const user = await User.findById(userId).select('-password');
     
     if (!user) {
       return res.status(401).json({ message: 'Invalid token. User not found.' });
@@ -45,14 +46,15 @@ const verifyToken = async (req, res, next) => {
     
     // Set both formats for compatibility
     req.user = { 
-      id: decoded.id, 
+      id: userId, 
       username: decoded.username, 
       role: decoded.role,
       dbUser: user 
     };
     next();
   } catch (error) {
-    res.status(400).json({ message: 'Invalid token.' });
+    console.error('JWT verification error:', error);
+    res.status(401).json({ message: 'Invalid token' });
   }
 };
 

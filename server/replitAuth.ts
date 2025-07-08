@@ -195,10 +195,36 @@ export async function setupAuth(app: Express) {
   // Google OAuth routes
   app.get("/api/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
   
-  app.get("/api/auth/google/callback", passport.authenticate("google", { failureRedirect: "/auth" }), (req, res) => {
-    // Successful authentication, redirect to dashboard
-    console.log('Google OAuth successful, redirecting to dashboard');
-    res.redirect("/");
+  app.get("/api/auth/google/callback", passport.authenticate("google", { failureRedirect: "/auth" }), async (req, res) => {
+    try {
+      // Successful authentication, generate JWT token
+      console.log('Google OAuth successful, generating JWT token');
+      const user = req.user;
+      
+      if (!user) {
+        console.error('No user found in Google OAuth callback');
+        return res.redirect("/auth?error=oauth_failed");
+      }
+      
+      // Generate JWT token for the user
+      const jwt = require('jsonwebtoken');
+      const token = jwt.sign(
+        { 
+          id: user._id, 
+          userId: user._id, 
+          username: user.username, 
+          role: user.role 
+        },
+        process.env.JWT_SECRET || 'fallback-secret',
+        { expiresIn: '24h' }
+      );
+      
+      // Redirect to frontend with token in URL hash (client-side only)
+      res.redirect(`/?token=${token}&auth_success=true`);
+    } catch (error) {
+      console.error('Google OAuth callback error:', error);
+      res.redirect("/auth?error=oauth_failed");
+    }
   });
 
   app.get("/api/login", (req, res, next) => {

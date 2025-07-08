@@ -17,9 +17,37 @@ import AuthPage from "@/pages/auth-page";
 import EmailVerification from "@/pages/email-verification";
 import AccountSetup from "@/pages/AccountSetup";
 import NotFound from "@/pages/not-found";
+import { useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 function Router() {
   const { isAuthenticated, isLoading, isAdmin } = useAuth();
+  const { toast } = useToast();
+
+  // Handle Google OAuth token in URL
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    const authSuccess = urlParams.get('auth_success');
+    
+    if (token && authSuccess) {
+      // Store token in localStorage
+      localStorage.setItem('auth_token', token);
+      
+      // Clean up URL
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, '', newUrl);
+      
+      // Show success message
+      toast({
+        title: "Login successful",
+        description: "Welcome! You have been logged in with Google.",
+      });
+      
+      // Refresh the page to update authentication state
+      window.location.reload();
+    }
+  }, [toast]);
 
   if (isLoading) {
     return (
