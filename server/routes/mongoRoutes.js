@@ -573,6 +573,62 @@ router.get('/platform/stats', async (req, res) => {
   }
 });
 
+// Create sample enrollment for demonstration (temporary endpoint)
+router.get('/create-sample-enrollment', async (req, res) => {
+  try {
+    console.log('Creating sample enrollment...');
+    
+    // Find an existing student user
+    const user = await User.findOne({ role: 'student' });
+    console.log('Found user:', user ? `${user.firstName} ${user.lastName}` : 'None');
+    
+    if (!user) {
+      return res.status(404).json({ message: 'No student user found' });
+    }
+    
+    // Find an existing course
+    const course = await Course.findOne();
+    console.log('Found course:', course ? course.title : 'None');
+    
+    if (!course) {
+      return res.status(404).json({ message: 'No course found' });
+    }
+    
+    // Check if enrollment already exists
+    const existingEnrollment = await Enrollment.findOne({
+      student: user._id,
+      course: course._id
+    });
+    
+    if (existingEnrollment) {
+      console.log('Enrollment already exists');
+      return res.json({ message: 'Enrollment already exists', alreadyExists: true });
+    }
+    
+    // Create enrollment
+    const enrollment = new Enrollment({
+      student: user._id,
+      course: course._id,
+      progress: 25
+    });
+    
+    await enrollment.save();
+    console.log('Enrollment created successfully');
+    
+    res.json({
+      message: 'Sample enrollment created successfully',
+      enrollment: {
+        student: user.firstName + ' ' + user.lastName,
+        course: course.title,
+        progress: enrollment.progress
+      }
+    });
+  } catch (error) {
+    console.error('Error creating sample enrollment:', error);
+    res.status(500).json({ message: 'Failed to create sample enrollment', error: error.message });
+  }
+});
+
 // User stats - students can only see their own stats
 router.get('/users/:id/stats', filterStudentData, async (req, res) => {
   try {
