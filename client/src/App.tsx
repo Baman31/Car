@@ -32,7 +32,7 @@ function Router() {
     
     if (token && authSuccess) {
       // Store token in localStorage
-      localStorage.setItem('auth_token', token);
+      localStorage.setItem('token', token);
       
       // Clean up URL
       const newUrl = window.location.pathname;
