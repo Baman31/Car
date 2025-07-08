@@ -49,10 +49,13 @@ export default function Dashboard() {
 
   // Real-time data queries for student dashboard
   const { data: enrollments, isLoading: enrollmentsLoading } = useQuery<any[]>({
-    queryKey: [`/api/users/${userId}/enrollments`],
+    queryKey: ["/api/mongo/student/enrollments"],
     enabled: !!userId,
     refetchInterval: 3000, // Refresh every 3 seconds
   });
+
+  // Debug log to see enrollment data
+  console.log('Enrollments data:', enrollments);
 
   const { data: courses, isLoading: coursesLoading } = useQuery<any[]>({
     queryKey: ["/api/mongo/courses"],
@@ -79,10 +82,10 @@ export default function Dashboard() {
     
     const interval = setInterval(() => {
       queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}/stats`] });
-      queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}/enrollments`] });
       queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}/activities`] });
       queryClient.invalidateQueries({ queryKey: ["/api/mongo/courses"] });
       queryClient.invalidateQueries({ queryKey: ["/api/mongo/user/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/mongo/student/enrollments"] });
       if (user?.role === 'student') {
         queryClient.invalidateQueries({ queryKey: ["/api/mongo/student/my-results"] });
       }

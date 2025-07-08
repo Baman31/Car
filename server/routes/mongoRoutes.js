@@ -960,6 +960,24 @@ router.get('/student/my-results', verifyToken, async (req, res) => {
   }
 });
 
+// Get student's own enrollments
+router.get('/student/enrollments', verifyToken, async (req, res) => {
+  try {
+    const currentUser = req.user?.dbUser;
+    if (!currentUser || currentUser.role !== 'student') {
+      return res.status(403).json({ message: 'Student access required' });
+    }
+    
+    const enrollments = await Enrollment.find({ student: currentUser._id })
+      .populate('course', 'title category description thumbnail')
+      .select('course progress enrollmentDate completionDate isCompleted');
+    
+    res.json(enrollments);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch enrollments', error: error.message });
+  }
+});
+
 // Get all students with their test results for admin
 router.get('/admin/student-results', verifyToken, requireAdmin, async (req, res) => {
   try {
