@@ -279,8 +279,8 @@ export default function CourseDetail() {
                     <div className="w-20 h-20 bg-gradient-to-br from-gray-400 to-gray-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
                       <Youtube className="h-10 w-10 text-white" />
                     </div>
-                    <p className="text-gray-600 font-medium">No video lectures available</p>
-                    <p className="text-sm text-gray-500 mt-1">Check back later for new content</p>
+                    <div className="text-gray-600 font-medium">No video lectures available</div>
+                    <div className="text-sm text-gray-500 mt-1">Check back later for new content</div>
                   </div>
                 )}
               </div>
@@ -320,7 +320,7 @@ export default function CourseDetail() {
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <p className="font-bold text-gray-900 group-hover:text-purple-700 transition-colors">{module.title}</p>
+                          <div className="font-bold text-gray-900 group-hover:text-purple-700 transition-colors">{module.title}</div>
                           <div className="flex items-center mt-2 space-x-3">
                             <div className="flex items-center bg-purple-100 rounded-full px-2 py-1">
                               <span className="text-xs font-medium text-purple-700">Video {index + 1}</span>
@@ -331,7 +331,7 @@ export default function CourseDetail() {
                             </div>
                           </div>
                           {module.description && (
-                            <p className="text-xs text-gray-500 mt-2 line-clamp-2">{module.description}</p>
+                            <div className="text-xs text-gray-500 mt-2 line-clamp-2">{module.description}</div>
                           )}
                         </div>
                         <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center ml-3 group-hover:scale-110 transition-transform duration-300">
@@ -353,7 +353,7 @@ export default function CourseDetail() {
                       </div>
                       {notes.map((note: any, index: number) => (
                         <div key={note._id || index} className="p-4 rounded-xl bg-gradient-to-r from-white to-green-50/50 border-l-4 border-gradient-to-b from-green-500 to-emerald-500 shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-300 mb-3">
-                          <p className="font-bold text-gray-900">{note.title}</p>
+                          <div className="font-bold text-gray-900">{note.title}</div>
                           <div className="flex items-center mt-2 space-x-2">
                             <div className="flex items-center bg-green-100 rounded-full px-2 py-1">
                               <svg className="h-3 w-3 mr-1 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -375,8 +375,8 @@ export default function CourseDetail() {
                       <div className="w-16 h-16 bg-gradient-to-br from-gray-400 to-gray-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
                         <span className="text-2xl">📚</span>
                       </div>
-                      <p className="text-gray-600 font-medium">No content available</p>
-                      <p className="text-sm text-gray-500 mt-1">Content will appear here</p>
+                      <div className="text-gray-600 font-medium">No content available</div>
+                      <div className="text-sm text-gray-500 mt-1">Content will appear here</div>
                     </div>
                   )}
                 </div>
