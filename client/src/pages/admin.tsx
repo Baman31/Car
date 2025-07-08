@@ -658,7 +658,7 @@ export default function Admin() {
                           <span>Student Overview</span>
                         </h4>
                         <div className="space-y-2">
-                          {studentResults?.slice(0, 3).map((student, index) => (
+                          {studentResults?.map((student, index) => (
                             <div key={student.student._id} className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center space-x-3">
