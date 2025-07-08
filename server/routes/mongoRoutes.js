@@ -922,7 +922,7 @@ router.get('/students/by-username/:username', async (req, res) => {
   }
 });
 
-// Get student's own test results
+// Get student's own test results (only for enrolled courses)
 router.get('/student/my-results', verifyToken, async (req, res) => {
   try {
     const currentUser = req.user?.dbUser;
@@ -930,7 +930,20 @@ router.get('/student/my-results', verifyToken, async (req, res) => {
       return res.status(403).json({ message: 'Student access required' });
     }
     
-    const tests = await Test.find({ isActive: true })
+    // Get student's enrolled courses from both enrollment collections and user's enrolledCourses array
+    const enrollments = await Enrollment.find({ student: currentUser._id }).select('course');
+    const enrollmentCourseIds = enrollments.map(e => e.course.toString());
+    const userEnrolledCourses = currentUser.enrolledCourses || [];
+    const allEnrolledCourseIds = [...enrollmentCourseIds, ...userEnrolledCourses.map(id => id.toString())];
+    
+    // Remove duplicates
+    const uniqueEnrolledCourseIds = [...new Set(allEnrolledCourseIds)];
+    
+    // Only get tests for courses the student is enrolled in
+    const tests = await Test.find({ 
+      isActive: true,
+      course: { $in: uniqueEnrolledCourseIds }
+    })
       .populate('course', 'title category')
       .select('title course results maxScore');
     
@@ -1069,36 +1082,53 @@ router.post('/student/sync-enrollments', verifyToken, async (req, res) => {
   }
 });
 
-// Get all students with their test results for admin
+// Get all students with their test results for admin (only for enrolled courses)
 router.get('/admin/student-results', verifyToken, requireAdmin, async (req, res) => {
   try {
     const students = await User.find({ role: 'student', isActive: true })
-      .select('firstName lastName email');
+      .select('firstName lastName email enrolledCourses');
     
     const tests = await Test.find({ isActive: true })
       .populate('course', 'title category')
       .select('title course results maxScore');
     
-    const studentResults = students.map(student => {
-      const testResults = tests.map(test => {
-        const result = test.results.find(
-          r => r.student.toString() === student._id.toString()
-        );
-        
-        return {
-          testId: test._id,
-          testTitle: test.title,
-          course: test.course,
-          maxScore: test.maxScore,
-          result: result || null
-        };
-      });
+    const studentResults = [];
+    
+    for (const student of students) {
+      // Get student's enrolled courses from both enrollment collections and user's enrolledCourses array
+      const enrollments = await Enrollment.find({ student: student._id }).select('course');
+      const enrollmentCourseIds = enrollments.map(e => e.course.toString());
+      const userEnrolledCourses = student.enrolledCourses || [];
+      const allEnrolledCourseIds = [...enrollmentCourseIds, ...userEnrolledCourses.map(id => id.toString())];
       
-      return {
-        student,
-        testResults
-      };
-    });
+      // Remove duplicates
+      const uniqueEnrolledCourseIds = [...new Set(allEnrolledCourseIds)];
+      
+      // Only include test results for courses the student is enrolled in
+      const testResults = tests
+        .filter(test => uniqueEnrolledCourseIds.includes(test.course._id.toString()))
+        .map(test => {
+          const result = test.results.find(
+            r => r.student.toString() === student._id.toString()
+          );
+          
+          return {
+            testId: test._id,
+            testTitle: test.title,
+            course: test.course,
+            maxScore: test.maxScore,
+            result: result || null
+          };
+        });
+      
+      // Only include students who are enrolled in at least one course
+      if (testResults.length > 0) {
+        studentResults.push({
+          student,
+          testResults
+        });
+      }
+    }
     
     res.json(studentResults);
   } catch (error) {
