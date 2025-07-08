@@ -29,7 +29,6 @@ const moduleSchema = z.object({
     (url) => /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/.test(url),
     "Please enter a valid YouTube URL (youtube.com or youtu.be)"
   ),
-  duration: z.number().min(1, "Duration must be at least 1 minute"),
   orderIndex: z.number().min(0, "Order index must be 0 or greater").optional(),
 });
 
@@ -124,7 +123,6 @@ export default function CourseForm({ course, onSuccess, onCancel }: CourseFormPr
         title: "",
         description: "",
         youtubeUrl: "",
-        duration: 0,
       },
     ]);
   };
@@ -173,7 +171,6 @@ export default function CourseForm({ course, onSuccess, onCancel }: CourseFormPr
     const validatedModules = modules.map((module, index) => ({
       ...module,
       orderIndex: index,
-      duration: Number(module.duration) || 0,
     }));
 
     const validatedNotes = notes.map(note => ({
@@ -197,10 +194,10 @@ export default function CourseForm({ course, onSuccess, onCancel }: CourseFormPr
 
     // Validate modules
     for (const module of validatedModules) {
-      if (!module.title || !module.youtubeUrl || !module.duration) {
+      if (!module.title || !module.youtubeUrl) {
         toast({
           title: "Error",
-          description: "All video modules must have title, YouTube URL, and duration",
+          description: "All video modules must have title and YouTube URL",
           variant: "destructive",
         });
         return;
@@ -536,8 +533,8 @@ export default function CourseForm({ course, onSuccess, onCancel }: CourseFormPr
                           <p className="text-gray-900 dark:text-white font-medium">{module.title}</p>
                         </div>
                         <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-blue-200 dark:border-blue-700">
-                          <span className="font-semibold text-blue-700 dark:text-blue-300 text-sm">Duration:</span>
-                          <p className="text-gray-900 dark:text-white font-medium">{module.duration} minutes</p>
+                          <span className="font-semibold text-blue-700 dark:text-blue-300 text-sm">Status:</span>
+                          <p className="text-gray-900 dark:text-white font-medium">Video Module</p>
                         </div>
                       </div>
                       
@@ -623,23 +620,7 @@ export default function CourseForm({ course, onSuccess, onCancel }: CourseFormPr
                           className="h-11 border-2 border-purple-200 dark:border-purple-700 focus:border-purple-500 rounded-lg bg-white dark:bg-gray-800"
                         />
                       </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-purple-700 dark:text-purple-300 mb-2">
-                          ⏱️ Duration
-                        </label>
-                        <div className="relative">
-                          <Input
-                            type="number"
-                            placeholder="0"
-                            value={module.duration || ""}
-                            onChange={(e) => updateModule(index, "duration", Number(e.target.value))}
-                            className="h-11 border-2 border-purple-200 dark:border-purple-700 focus:border-purple-500 rounded-lg bg-white dark:bg-gray-800 pr-20"
-                          />
-                          <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 text-sm">
-                            minutes
-                          </div>
-                        </div>
-                      </div>
+
                     </div>
 
                     <div>

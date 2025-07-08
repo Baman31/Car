@@ -195,8 +195,8 @@ export default function VideoPlayer() {
                     <p className="text-gray-600 mb-4">{module.description}</p>
                   )}
                   <div className="flex items-center text-sm text-gray-500">
-                    <Clock className="h-4 w-4 mr-1" />
-                    <span>{module.duration} minutes</span>
+                    <Play className="h-4 w-4 mr-1" />
+                    <span>Video Module</span>
                     {isModuleCompleted(module) && (
                       <div className="flex items-center ml-4 bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">
                         <Check className="h-3 w-3 mr-1" />
@@ -250,8 +250,8 @@ export default function VideoPlayer() {
                                 )}
                               </div>
                               <div className="flex items-center text-xs text-gray-500 mt-1">
-                                <Clock className="h-3 w-3 mr-1" />
-                                {mod.duration} min
+                                <Play className="h-3 w-3 mr-1" />
+                                Video
                                 {isCompleted && (
                                   <span className="ml-2 text-green-600 font-medium">• Completed</span>
                                 )}

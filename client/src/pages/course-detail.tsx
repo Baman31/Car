@@ -234,8 +234,8 @@ export default function CourseDetail() {
                                     )}
                                     <div className="flex items-center text-sm text-gray-500 space-x-4">
                                       <div className="flex items-center bg-blue-100 rounded-full px-3 py-1">
-                                        <Clock className="h-4 w-4 mr-1 text-blue-600" />
-                                        <span className="font-medium text-blue-700">{module.duration} min</span>
+                                        <Play className="h-4 w-4 mr-1 text-blue-600" />
+                                        <span className="font-medium text-blue-700">Video</span>
                                       </div>
                                       <div className="flex items-center bg-red-100 rounded-full px-3 py-1">
                                         <Youtube className="h-4 w-4 mr-1 text-red-600" />
@@ -327,7 +327,7 @@ export default function CourseDetail() {
                             </div>
                             <div className="flex items-center bg-pink-100 rounded-full px-2 py-1">
                               <Clock className="h-3 w-3 mr-1 text-pink-600" />
-                              <span className="text-xs font-medium text-pink-700">{module.duration} min</span>
+                              <span className="text-xs font-medium text-pink-700">Video</span>
                             </div>
                           </div>
                           {module.description && (

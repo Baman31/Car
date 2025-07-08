@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Video, Play, ArrowRight } from "lucide-react";
+import { FileText, Video, Play, ArrowRight } from "lucide-react";
 import { getProgressColor, getStatusColor } from "@/lib/utils";
 import type { Course, Enrollment } from "@shared/schema";
 
@@ -76,13 +76,13 @@ export default function CourseCard({ course, enrollment }: CourseCardProps) {
           <div className="w-2 h-2 bg-white/60 rounded-full animate-bounce" />
         </div>
         
-        {/* Duration Display */}
+        {/* PDF Notes Display */}
         <div className="absolute bottom-4 left-4 z-10">
           <div className="bg-black/50 backdrop-blur-md rounded-lg px-3 py-1.5 border border-white/10">
             <div className="flex items-center space-x-2">
-              <Clock className="h-3 w-3 text-white" />
+              <FileText className="h-3 w-3 text-white" />
               <span className="text-white text-xs font-medium">
-                {Math.floor((course.duration || 0) / 60)}h
+                {course.notes?.length || 0} PDFs
               </span>
             </div>
           </div>
@@ -113,12 +113,12 @@ export default function CourseCard({ course, enrollment }: CourseCardProps) {
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-4 border border-blue-100 dark:border-blue-800">
               <div className="flex items-center space-x-3">
                 <div className="p-2 bg-blue-500 rounded-lg">
-                  <Clock className="h-4 w-4 text-white" />
+                  <FileText className="h-4 w-4 text-white" />
                 </div>
                 <div>
-                  <p className="text-xs text-blue-600 dark:text-blue-400 font-medium uppercase tracking-wider">Duration</p>
+                  <p className="text-xs text-blue-600 dark:text-blue-400 font-medium uppercase tracking-wider">PDF Notes</p>
                   <p className="text-sm font-bold text-blue-900 dark:text-blue-100">
-                    {Math.floor((course.duration || 0) / 60)} hours
+                    {course.notes?.length || 0} files
                   </p>
                 </div>
               </div>

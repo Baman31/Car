@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 
 interface VideoPlayerProps {
   title: string;
-  duration: string;
   videoUrl?: string;
 }
 
@@ -23,7 +22,7 @@ const getYouTubeVideoId = (url: string): string | null => {
   return null;
 };
 
-export default function VideoPlayer({ title, duration, videoUrl }: VideoPlayerProps) {
+export default function VideoPlayer({ title, videoUrl }: VideoPlayerProps) {
   const videoId = videoUrl ? getYouTubeVideoId(videoUrl) : null;
   
   if (!videoUrl || !videoId) {
@@ -33,8 +32,8 @@ export default function VideoPlayer({ title, duration, videoUrl }: VideoPlayerPr
           <Play className="h-16 w-16 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">{title}</h3>
           <p className="text-sm text-gray-500 flex items-center justify-center gap-1">
-            <Clock className="h-4 w-4" />
-            {duration}
+            <Play className="h-4 w-4" />
+            Video Content
           </p>
         </div>
         <p className="text-gray-500">No video available</p>
