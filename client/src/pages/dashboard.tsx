@@ -91,14 +91,10 @@ export default function Dashboard() {
     inProgressCourses: enrollments?.filter(e => (e.progress || 0) > 0 && (e.progress || 0) < 100)?.length || 0,
     
     // Performance metrics with synchronized normalized scoring
-    totalTests: studentResults?.reduce((acc, course) => acc + (course.testResults?.length || 0), 0) || 0,
+    totalTests: studentResults?.length || 0,
     averageScore: dashboardStats?.averageScore || (studentResults?.length ? 
       Math.round(
-        studentResults.reduce((acc, course) => {
-          const courseAvg = course.testResults?.length ? 
-            course.testResults.reduce((sum: number, test: any) => sum + ((test.score || 0) / (test.maxScore || 100) * 100), 0) / course.testResults.length : 0;
-          return acc + courseAvg;
-        }, 0) / studentResults.length
+        studentResults.reduce((sum: number, test: any) => sum + ((test.score || 0) / (test.maxScore || 100) * 100), 0) / studentResults.length
       ) : 0),
     
     // Progress tracking
@@ -380,7 +376,20 @@ export default function Dashboard() {
                 <CardContent>
                   <div className="space-y-4">
                     {studentResults && studentResults.length > 0 ? (
-                      studentResults.slice(0, 3).map((courseResult, index) => (
+                      // Group test results by course
+                      Object.entries(
+                        studentResults.reduce((acc: any, result: any) => {
+                          const courseTitle = result.course?.title || 'Unknown Course';
+                          if (!acc[courseTitle]) {
+                            acc[courseTitle] = {
+                              course: result.course,
+                              testResults: []
+                            };
+                          }
+                          acc[courseTitle].testResults.push(result);
+                          return acc;
+                        }, {})
+                      ).slice(0, 3).map(([courseTitle, courseData]: [string, any], index) => (
                         <div key={index} className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 p-4 rounded-xl">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-3">
@@ -389,17 +398,17 @@ export default function Dashboard() {
                               </div>
                               <div>
                                 <p className="font-medium text-gray-900 dark:text-white">
-                                  {courseResult.course?.title || 'Unknown Course'}
+                                  {courseTitle}
                                 </p>
                                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                                  {courseResult.testResults?.length || 0} tests completed
+                                  {courseData.testResults.length} tests completed
                                 </p>
                               </div>
                             </div>
                             <div className="text-right">
                               <p className="font-bold text-gray-900 dark:text-white">
-                                {courseResult.testResults?.length ? 
-                                  Math.round(courseResult.testResults.reduce((sum: number, test: any) => sum + ((test.score || 0) / (test.maxScore || 100) * 100), 0) / courseResult.testResults.length) 
+                                {courseData.testResults.length ? 
+                                  Math.round(courseData.testResults.reduce((sum: number, test: any) => sum + ((test.score || 0) / (test.maxScore || 100) * 100), 0) / courseData.testResults.length) 
                                   : 0}%
                               </p>
                               <p className="text-xs text-purple-600 dark:text-purple-400">
