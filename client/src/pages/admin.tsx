@@ -672,14 +672,14 @@ export default function Admin() {
                                       {student.student.firstName} {student.student.lastName}
                                     </p>
                                     <p className="text-xs text-gray-600 dark:text-gray-400">
-                                      {student.testResults?.length || 0} tests completed
+                                      {student.testResults?.filter(test => test.result)?.length || 0} tests completed
                                     </p>
                                   </div>
                                 </div>
                                 <div className="text-right">
                                   <p className="font-bold text-gray-900 dark:text-white">
-                                    {student.testResults?.length ? 
-                                      Math.round(student.testResults.reduce((sum, test) => sum + ((test.score || 0) / (test.maxScore || 100) * 100), 0) / student.testResults.length) 
+                                    {student.testResults?.filter(test => test.result)?.length ? 
+                                      Math.round(student.testResults.filter(test => test.result).reduce((sum, test) => sum + ((test.result.score || 0) / (test.maxScore || 100) * 100), 0) / student.testResults.filter(test => test.result).length) 
                                       : 0}%
                                   </p>
                                 </div>

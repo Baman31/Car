@@ -125,6 +125,26 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+- **July 08, 2025**: Enrollment-Based Test Result Filtering Complete & Duration Fields Removed
+  - **Enrollment-Based Test Result Filtering**: Updated test results to only show courses where students are enrolled:
+    - Modified `/api/mongo/student/my-results` endpoint to filter tests based on student's enrolled courses
+    - Updated `/api/mongo/admin/student-results` endpoint to only show test results for courses where students are enrolled
+    - Backend now checks both Enrollment collection and user's enrolledCourses array for comprehensive enrollment tracking
+    - Students can only see test results for courses they're actually enrolled in, improving data relevance
+    - Admin view now shows only students who are enrolled in at least one course with test data
+  - **Duration Field Removal Complete**: Replaced duration fields with PDF notes count throughout the application:
+    - Removed duration input field from course creation and edit forms
+    - Updated course cards to display PDF notes count instead of duration
+    - Modified course detail pages to show "Video" instead of duration minutes
+    - Updated video player components to remove duration references
+    - Changed course overlay displays to show PDF count with FileText icon
+    - All duration-related displays now show relevant PDF notes or video indicators
+  - **Admin Dashboard Calculation Fixed**: Corrected percentage calculation to use actual test result data:
+    - Fixed student overview section to properly calculate averages from completed test results
+    - Updated calculation to filter only tests with actual results before computing percentages
+    - Percentage now accurately reflects student performance on enrolled courses only
+  - **All Systems Operational**: Test results now properly filtered by enrollment with accurate performance calculations
+
 - **July 08, 2025**: Video Lecture Completion Tracking Feature Complete & Test Results Page Fixed
   - **Module Completion System**: Added comprehensive completion tracking for video lectures:
     - Students can now mark individual video lectures as completed using checkboxes
