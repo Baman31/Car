@@ -553,8 +553,8 @@ router.put('/enrollments/:studentId/:courseId/progress', async (req, res) => {
 // Public platform stats endpoint (no authentication required)
 router.get('/platform/stats', async (req, res) => {
   try {
-    // Get total courses available
-    const totalCourses = await Course.countDocuments();
+    // Get total active courses available
+    const totalCourses = await Course.countDocuments({ isActive: true });
     
     // Get total available tests
     const availableTests = await Test.countDocuments({ isActive: true });
@@ -585,8 +585,8 @@ router.get('/user/stats', verifyToken, async (req, res) => {
     const userId = req.user.id;
     const userRole = req.user.role;
     
-    // Get total courses available
-    const totalCourses = await Course.countDocuments();
+    // Get total active courses available
+    const totalCourses = await Course.countDocuments({ isActive: true });
     
     // Get total available tests
     const availableTests = await Test.countDocuments({ isActive: true });
