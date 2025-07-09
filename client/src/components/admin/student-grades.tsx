@@ -259,11 +259,11 @@ function TestGradingCard({ test, onGradeDialog, getGradeColor }: TestGradingCard
                     <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                       <div 
                         className="bg-gradient-to-r from-green-500 to-blue-500 h-2 rounded-full transition-all duration-300" 
-                        style={{ width: `${students?.length ? ((test.results?.length || 0) / students.length) * 100 : 0}%` }}
+                        style={{ width: `${students?.length ? Math.min(((test.results?.length || 0) / students.length) * 100, 100) : 0}%` }}
                       ></div>
                     </div>
                     <div className="text-xs text-gray-600 dark:text-gray-400 font-medium">
-                      {students?.length ? Math.round(((test.results?.length || 0) / students.length) * 100) : 0}%
+                      {students?.length ? Math.min(Math.round(((test.results?.length || 0) / students.length) * 100), 100) : 0}%
                     </div>
                   </div>
                 </div>
