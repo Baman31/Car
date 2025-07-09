@@ -353,57 +353,124 @@ export default function Admin() {
           </div>
         </div>
         
-        {/* Enhanced Content Area */}
-        <div className="flex-1 overflow-auto p-8 bg-gradient-to-br from-gray-50/50 to-white/50 dark:from-gray-900/50 dark:to-gray-800/50">
+        {/* Ultra-Enhanced Content Area with Advanced Styling */}
+        <div className="flex-1 overflow-auto relative">
+          {/* Animated Background Pattern */}
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 dark:from-slate-900 dark:via-blue-900/20 dark:to-indigo-900/10">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(120,119,198,0.1),transparent_50%)]"></div>
+            <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_49%,rgba(255,255,255,0.03)_50%,transparent_51%)] bg-[length:20px_20px]"></div>
+          </div>
+          
+          {/* Floating Decorative Elements */}
+          <div className="absolute top-20 right-20 w-32 h-32 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-xl animate-pulse"></div>
+          <div className="absolute bottom-20 left-20 w-24 h-24 bg-gradient-to-br from-pink-400/20 to-rose-400/20 rounded-full blur-xl animate-pulse delay-1000"></div>
+          <div className="absolute top-1/2 right-1/3 w-16 h-16 bg-gradient-to-br from-cyan-400/20 to-teal-400/20 rounded-full blur-lg animate-pulse delay-500"></div>
+          
+          {/* Main Content Container */}
+          <div className="relative z-10 p-8 space-y-8">
           {/* Tab Content Based on Active Tab */}
           {activeTab === "analytics" && (
             <div className="space-y-8">
-              {/* Enhanced Analytics Header */}
-              <div className="rounded-3xl border border-white/20 shadow-2xl overflow-hidden bg-gradient-to-r from-blue-50/50 via-indigo-50/50 to-purple-50/50 dark:from-blue-900/20 dark:via-indigo-900/20 dark:to-purple-900/20">
-                <div className="h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500" />
-                <div className="bg-gradient-to-r from-white/10 to-white/5 backdrop-blur-sm">
-                  <div className="p-8">
-                    <div className="flex flex-col lg:flex-row gap-6 justify-between items-start lg:items-center">
-                      <div className="flex items-center space-x-6">
-                        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
-                          <BarChart3 className="w-10 h-10 text-white" />
+              {/* Ultra-Enhanced Analytics Header with Advanced Styling */}
+              <div className="relative group">
+                {/* Animated Background Glow */}
+                <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-3xl blur-xl opacity-25 group-hover:opacity-40 transition-opacity duration-500 animate-pulse"></div>
+                
+                {/* Main Header Container */}
+                <div className="relative rounded-3xl border border-white/20 shadow-2xl overflow-hidden bg-gradient-to-br from-white/90 via-blue-50/80 to-purple-50/60 dark:from-gray-900/90 dark:via-blue-900/30 dark:to-purple-900/20 backdrop-blur-xl">
+                  {/* Animated Top Border */}
+                  <div className="h-2 bg-gradient-to-r from-blue-500 via-indigo-500 via-purple-500 to-pink-500 relative">
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"></div>
+                  </div>
+                  
+                  {/* Content Section */}
+                  <div className="relative bg-gradient-to-r from-white/20 via-white/10 to-white/5 backdrop-blur-sm">
+                    {/* Floating Decorative Elements */}
+                    <div className="absolute top-4 right-8 w-12 h-12 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-lg animate-pulse"></div>
+                    <div className="absolute bottom-4 left-8 w-8 h-8 bg-gradient-to-br from-pink-400/20 to-rose-400/20 rounded-full blur-md animate-pulse delay-700"></div>
+                    
+                    <div className="p-10">
+                      <div className="flex flex-col lg:flex-row gap-8 justify-between items-start lg:items-center">
+                        <div className="flex items-center space-x-8">
+                          {/* Enhanced Icon Container */}
+                          <div className="relative group/icon">
+                            <div className="absolute -inset-2 bg-gradient-to-br from-blue-600 to-purple-600 rounded-3xl blur-lg opacity-20 group-hover/icon:opacity-40 transition-opacity duration-300"></div>
+                            <div className="relative w-24 h-24 rounded-3xl bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 flex items-center justify-center shadow-2xl transform group-hover/icon:scale-105 transition-transform duration-300">
+                              <BarChart3 className="w-12 h-12 text-white drop-shadow-lg" />
+                              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-3xl"></div>
+                            </div>
+                          </div>
+                          
+                          {/* Enhanced Title Section */}
+                          <div className="space-y-3">
+                            <div className="flex items-center space-x-4">
+                              <h2 className="text-4xl font-black bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 dark:from-white dark:via-blue-200 dark:to-purple-200 bg-clip-text text-transparent">
+                                Platform Analytics
+                              </h2>
+                              <div className="px-3 py-1 bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900/50 dark:to-purple-900/50 rounded-full border border-blue-200 dark:border-blue-700">
+                                <span className="text-blue-700 dark:text-blue-300 text-sm font-bold flex items-center space-x-1">
+                                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                                  <span>Live Dashboard</span>
+                                </span>
+                              </div>
+                            </div>
+                            <p className="text-gray-600 dark:text-gray-300 text-xl font-medium max-w-md">
+                              Advanced insights and real-time analytics for your educational platform
+                            </p>
+                            <div className="flex items-center space-x-4 text-sm">
+                              <div className="flex items-center space-x-1 text-green-600 dark:text-green-400">
+                                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                                <span className="font-medium">Real-time Data</span>
+                              </div>
+                              <div className="flex items-center space-x-1 text-blue-600 dark:text-blue-400">
+                                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse delay-300"></div>
+                                <span className="font-medium">Interactive Charts</span>
+                              </div>
+                              <div className="flex items-center space-x-1 text-purple-600 dark:text-purple-400">
+                                <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse delay-500"></div>
+                                <span className="font-medium">Advanced Metrics</span>
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                        <div className="space-y-2">
-                          <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
-                            Platform Analytics
-                          </h2>
-                          <p className="text-gray-600 dark:text-gray-300 text-lg">
-                            Insights into your learning platform performance
-                          </p>
+                        
+                        {/* Enhanced Controls Section */}
+                        <div className="flex flex-col space-y-4">
+                          <div className="flex items-center space-x-4">
+                            <div className="relative group/status">
+                              <div className="absolute -inset-1 bg-gradient-to-r from-green-600 to-blue-600 rounded-xl blur opacity-20 group-hover/status:opacity-40 transition-opacity duration-300"></div>
+                              <div className="relative flex items-center space-x-3 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 px-6 py-3 rounded-xl border border-green-200/50 dark:border-green-800/50 backdrop-blur-sm">
+                                <div className="w-4 h-4 bg-gradient-to-r from-green-500 to-blue-500 rounded-full animate-pulse shadow-lg"></div>
+                                <span className="text-green-800 dark:text-green-200 font-bold">Manual Refresh Mode</span>
+                                <div className="px-2 py-1 bg-white/50 dark:bg-gray-800/50 rounded-md text-xs font-medium text-gray-600 dark:text-gray-400">
+                                  Click to update
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <Button 
+                            variant="outline" 
+                            size="lg"
+                            onClick={() => {
+                              queryClient.invalidateQueries({ queryKey: ["/api/mongo/admin/stats"] });
+                              queryClient.invalidateQueries({ queryKey: ["/api/mongo/admin/student-results"] });
+                              queryClient.invalidateQueries({ queryKey: ["/api/mongo/admin/users"] });
+                              queryClient.invalidateQueries({ queryKey: ["/api/mongo/courses"] });
+                              queryClient.invalidateQueries({ queryKey: ["/api/mongo/tests"] });
+                              queryClient.invalidateQueries({ queryKey: ["/api/mongo/admin/pending-approvals"] });
+                              toast({
+                                title: "Analytics Refreshed",
+                                description: "All platform data has been updated successfully",
+                              });
+                            }}
+                            className="relative group/refresh bg-gradient-to-r from-white/90 to-blue-50/90 dark:from-gray-800/90 dark:to-blue-900/30 border-gray-200/50 dark:border-gray-700/50 hover:from-blue-50 hover:to-indigo-50 dark:hover:from-blue-900/40 dark:hover:to-indigo-900/30 backdrop-blur-sm font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
+                          >
+                            <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg blur opacity-0 group-hover/refresh:opacity-20 transition-opacity duration-300"></div>
+                            <RefreshCw className="w-5 h-5 mr-3 group-hover/refresh:rotate-180 transition-transform duration-500" />
+                            Refresh Analytics
+                          </Button>
                         </div>
-                      </div>
-                      
-                      {/* Real-time Indicator */}
-                      <div className="flex items-center space-x-4">
-                        <div className="flex items-center space-x-2 bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-xl border border-blue-200 dark:border-blue-800">
-                          <div className="w-3 h-3 bg-blue-500 rounded-full" />
-                          <span className="text-blue-800 dark:text-blue-200 text-sm font-medium">Manual Refresh</span>
-                        </div>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => {
-                            queryClient.invalidateQueries({ queryKey: ["/api/mongo/admin/stats"] });
-                            queryClient.invalidateQueries({ queryKey: ["/api/mongo/admin/student-results"] });
-                            queryClient.invalidateQueries({ queryKey: ["/api/mongo/admin/users"] });
-                            queryClient.invalidateQueries({ queryKey: ["/api/mongo/courses"] });
-                            queryClient.invalidateQueries({ queryKey: ["/api/mongo/tests"] });
-                            queryClient.invalidateQueries({ queryKey: ["/api/mongo/admin/pending-approvals"] });
-                            toast({
-                              title: "Data Refreshed",
-                              description: "All analytics data has been updated",
-                            });
-                          }}
-                          className="bg-white/80 hover:bg-white border-gray-200 hover:border-gray-300"
-                        >
-                          <RefreshCw className="w-4 h-4 mr-2" />
-                          Refresh Now
-                        </Button>
                       </div>
                     </div>
                   </div>
@@ -1362,6 +1429,7 @@ export default function Admin() {
               <StudentGrades />
             </div>
           )}
+          </div>
         </div>
       </main>
     </div>
