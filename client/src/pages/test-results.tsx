@@ -42,6 +42,17 @@ export default function TestResults() {
     enabled: !!user && isAdmin,
   });
 
+  // Fetch admin stats for total students enrolled metric
+  const { data: adminStats } = useQuery<{
+    studentsEnrolled: number;
+    totalStudents: number;
+    averageScore: number;
+    totalCourses: number;
+  }>({
+    queryKey: ["/api/mongo/admin/stats"],
+    enabled: !!user && isAdmin,
+  });
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -309,13 +320,13 @@ export default function TestResults() {
                           </div>
                           <div>
                             <p className="text-xs text-blue-600 dark:text-blue-400 font-medium uppercase tracking-wider">
-                              {selectedCourse === "all" ? "Total Students" : "Students in Course"}
+                              Total Students Enrolled
                             </p>
                             <p className="text-lg font-bold text-blue-900 dark:text-blue-100 font-mono">
-                              {totalStudentsInCourse}
+                              {adminStats?.studentsEnrolled || 0}
                             </p>
                             <p className="text-xs text-blue-500 dark:text-blue-300 mt-1">
-                              {selectedCourse === "all" ? "Across all courses" : "Enrolled & active"}
+                              All courses combined
                             </p>
                           </div>
                         </div>
