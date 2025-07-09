@@ -253,8 +253,8 @@ export default function Admin() {
                   <div className="absolute top-2 right-2">
                     <div className="w-2 h-2 bg-blue-400 rounded-full " />
                   </div>
-                  <div className="text-2xl font-bold text-white">{adminStats?.approvedEnrolledStudents || 0}</div>
-                  <div className="text-blue-100 text-sm font-medium">Approved & Enrolled</div>
+                  <div className="text-2xl font-bold text-white">{adminStats?.studentsEnrolled || 0}</div>
+                  <div className="text-blue-100 text-sm font-medium">Students Enrolled</div>
                 </div>
                 <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 text-center min-w-[120px] border border-white/30 relative">
                   <div className="absolute top-2 right-2">
@@ -503,9 +503,9 @@ export default function Admin() {
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-green-600 dark:text-green-400">Approved & Enrolled</p>
+                        <p className="text-sm font-medium text-green-600 dark:text-green-400">Total Students Enrolled</p>
                         <p className="text-3xl font-bold text-green-900 dark:text-green-100">
-                          {adminStats?.approvedEnrolledStudents || 0}
+                          {adminStats?.studentsEnrolled || 0}
                         </p>
                         
                       </div>
