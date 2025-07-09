@@ -167,29 +167,111 @@ function TestGradingCard({ test, onGradeDialog, getGradeColor }: TestGradingCard
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex justify-between items-center">
-          <div>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <BookOpen className="h-5 w-5" />
-              {test.title}
-            </CardTitle>
-            <p className="text-sm text-gray-600">
-              {test.course?.title} • Max Score: {test.maxScore || 100}
-            </p>
-            <div className="flex items-center space-x-2 mt-2">
-              <div className="flex items-center space-x-1 text-xs text-green-600">
-                <Activity className="w-3 h-3" />
-                <span>Live Data</span>
+    <Card className="relative group overflow-hidden border-0 shadow-2xl">
+      {/* Animated Background Glow */}
+      <div className="absolute -inset-1 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-2xl blur-xl opacity-20 group-hover:opacity-30 transition-opacity duration-500 animate-pulse"></div>
+      
+      {/* Main Card Container */}
+      <div className="relative bg-gradient-to-br from-white/95 via-blue-50/90 to-indigo-50/80 dark:from-gray-900/95 dark:via-blue-900/30 dark:to-indigo-900/20 backdrop-blur-xl rounded-xl border border-white/20 dark:border-gray-700/30">
+        <CardHeader className="relative">
+          {/* Decorative Top Border */}
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-t-xl">
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse"></div>
+          </div>
+          
+          {/* Floating Decorative Elements */}
+          <div className="absolute top-3 right-6 w-6 h-6 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-sm animate-pulse"></div>
+          <div className="absolute bottom-3 left-6 w-4 h-4 bg-gradient-to-br from-pink-400/20 to-rose-400/20 rounded-full blur-sm animate-pulse delay-500"></div>
+          
+          <div className="flex justify-between items-start pt-4">
+            <div className="flex-1 space-y-4">
+              {/* Enhanced Title Section */}
+              <div className="relative">
+                <CardTitle className="text-2xl font-bold flex items-center gap-4 group/title">
+                  {/* Enhanced Icon Container */}
+                  <div className="relative group/icon">
+                    <div className="absolute -inset-1 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl blur opacity-20 group-hover/icon:opacity-40 transition-opacity duration-300"></div>
+                    <div className="relative w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg transform group-hover/icon:scale-105 transition-transform duration-300">
+                      <BookOpen className="h-6 w-6 text-white drop-shadow-sm" />
+                      <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-xl"></div>
+                    </div>
+                  </div>
+                  
+                  {/* Enhanced Title Text */}
+                  <div className="space-y-1">
+                    <span className="bg-gradient-to-r from-gray-900 via-indigo-800 to-purple-800 dark:from-white dark:via-blue-200 dark:to-purple-200 bg-clip-text text-transparent font-black">
+                      {test.title}
+                    </span>
+                    <div className="flex items-center space-x-2">
+                      <div className="px-2 py-1 bg-gradient-to-r from-indigo-100 to-purple-100 dark:from-indigo-900/50 dark:to-purple-900/50 rounded-md border border-indigo-200 dark:border-indigo-700">
+                        <span className="text-indigo-700 dark:text-indigo-300 text-xs font-bold">Test Assessment</span>
+                      </div>
+                    </div>
+                  </div>
+                </CardTitle>
+                
+                {/* Enhanced Course Information */}
+                <div className="mt-4 space-y-3">
+                  <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-2 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 px-4 py-2 rounded-lg border border-blue-200/50 dark:border-blue-800/50 backdrop-blur-sm">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                      <span className="text-blue-800 dark:text-blue-200 font-semibold text-sm">{test.course?.title}</span>
+                    </div>
+                    <div className="flex items-center space-x-2 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 px-4 py-2 rounded-lg border border-purple-200/50 dark:border-purple-800/50 backdrop-blur-sm">
+                      <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                        <span className="text-white font-bold text-xs">{test.maxScore || 100}</span>
+                      </div>
+                      <span className="text-purple-800 dark:text-purple-200 font-semibold text-sm">Max Score</span>
+                    </div>
+                  </div>
+                  
+                  {/* Enhanced Status Indicators */}
+                  <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-2 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 px-3 py-2 rounded-lg border border-green-200/50 dark:border-green-800/50">
+                      <Activity className="w-4 h-4 text-green-600 animate-pulse" />
+                      <span className="text-green-800 dark:text-green-200 text-sm font-medium">Live Data</span>
+                    </div>
+                    <div className="flex items-center space-x-2 bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 px-3 py-2 rounded-lg border border-orange-200/50 dark:border-orange-800/50">
+                      <div className="w-3 h-3 bg-gradient-to-r from-orange-500 to-red-500 rounded-full animate-pulse"></div>
+                      <span className="text-orange-800 dark:text-orange-200 text-sm font-medium">Auto-refresh</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Enhanced Completion Badge */}
+            <div className="relative group/badge ml-6">
+              <div className="absolute -inset-1 bg-gradient-to-r from-green-600 to-blue-600 rounded-xl blur opacity-20 group-hover/badge:opacity-40 transition-opacity duration-300"></div>
+              <div className="relative bg-gradient-to-r from-white/90 to-green-50/90 dark:from-gray-800/90 dark:to-green-900/30 backdrop-blur-sm rounded-xl border border-green-200/50 dark:border-green-800/50 p-4 shadow-lg">
+                <div className="text-center space-y-2">
+                  <div className="flex items-center justify-center space-x-2">
+                    <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-blue-500 rounded-full flex items-center justify-center">
+                      <span className="text-white font-bold text-sm">{test.results?.length || 0}</span>
+                    </div>
+                    <span className="text-gray-400 dark:text-gray-500 font-medium">/</span>
+                    <div className="w-8 h-8 bg-gradient-to-br from-gray-400 to-gray-500 rounded-full flex items-center justify-center">
+                      <span className="text-white font-bold text-sm">{students?.length || 0}</span>
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-xs font-bold text-green-800 dark:text-green-200">Completed</div>
+                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                      <div 
+                        className="bg-gradient-to-r from-green-500 to-blue-500 h-2 rounded-full transition-all duration-300" 
+                        style={{ width: `${students?.length ? ((test.results?.length || 0) / students.length) * 100 : 0}%` }}
+                      ></div>
+                    </div>
+                    <div className="text-xs text-gray-600 dark:text-gray-400 font-medium">
+                      {students?.length ? Math.round(((test.results?.length || 0) / students.length) * 100) : 0}%
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-          <Badge variant="outline">
-            {test.results?.length || 0} / {students?.length || 0} Completed
-          </Badge>
-        </div>
-      </CardHeader>
+        </CardHeader>
+      </div>
       <CardContent>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
