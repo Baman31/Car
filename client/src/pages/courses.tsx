@@ -73,9 +73,9 @@ export default function Courses() {
 
   if (coursesLoading || enrollmentsLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex">
+      <div className="min-h-screen bg-gray-50">
         <Sidebar />
-        <main className="flex-1 p-8">
+        <main className="ml-64 min-h-screen p-8">
           <div className="mb-6">
             <Skeleton className="h-8 w-48 mb-4" />
             <div className="flex space-x-3">
@@ -127,9 +127,9 @@ export default function Courses() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-50">
       <Sidebar />
-      <main className="flex-1 overflow-auto">
+      <main className="ml-64 min-h-screen overflow-auto">
         {/* Header Section */}
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-8">
           <div className="text-center text-white">

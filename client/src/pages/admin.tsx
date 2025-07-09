@@ -196,9 +196,9 @@ export default function Admin() {
 
   if (statsLoading && activeTab === "analytics") {
     return (
-      <div className="min-h-screen bg-gray-50 flex">
+      <div className="min-h-screen bg-gray-50">
         <Sidebar />
-        <main className="flex-1 p-8">
+        <main className="ml-64 min-h-screen p-8">
           <div className="mb-6">
             <Skeleton className="h-8 w-48 mb-2" />
             <Skeleton className="h-6 w-64" />
@@ -214,9 +214,9 @@ export default function Admin() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-slate-900 flex">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-slate-900">
       <Sidebar />
-      <main className="flex-1 flex flex-col">
+      <main className="ml-64 min-h-screen flex flex-col">
         {/* Enhanced Admin Header */}
         <div className="relative bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 overflow-hidden">
           {/* Background decorations */}

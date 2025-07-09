@@ -46,7 +46,7 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="w-64 bg-blue-900 text-white h-screen flex flex-col">
+    <aside className="fixed left-0 top-0 w-64 bg-blue-900 text-white h-screen flex flex-col z-50">
       {/* Logo */}
       <div className="p-6 border-b border-blue-800/50 flex-shrink-0">
         <div className="flex items-center space-x-3 cursor-pointer group" onClick={() => setLocation('/dashboard')}>

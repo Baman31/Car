@@ -37,9 +37,9 @@ export default function TestResults() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex">
+      <div className="min-h-screen bg-gray-50">
         <Sidebar />
-        <main className="flex-1 p-8">
+        <main className="ml-64 min-h-screen p-8">
           <div className="flex justify-between items-center mb-6">
             <Skeleton className="h-8 w-48" />
             <Skeleton className="h-10 w-40" />
@@ -81,9 +81,9 @@ export default function TestResults() {
   const averageScore = 85; // Simplified for now
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-50">
       <Sidebar />
-      <main className="flex-1 overflow-auto">
+      <main className="ml-64 min-h-screen overflow-auto">
         {/* Header Section */}
         <div className="bg-gradient-to-r from-emerald-600 to-blue-600 p-8">
           <div className="text-center text-white">
