@@ -1274,8 +1274,8 @@ router.post('/admin/reject-user/:userId', requireAdmin, async (req, res) => {
 // Comprehensive Admin stats with real-time data
 router.get('/admin/stats', async (req, res) => {
   try {
-    // Basic counts
-    const totalCourses = await Course.countDocuments();
+    // Basic counts - only count active courses
+    const totalCourses = await Course.countDocuments({ isActive: true });
     const activeCourses = await Course.countDocuments({ isActive: true });
     const totalStudents = await User.countDocuments({ role: 'student' });
     const approvedStudents = await User.countDocuments({ role: 'student', isApproved: true });

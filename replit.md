@@ -125,14 +125,16 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-- **July 09, 2025**: Migration Complete & Course/Test Count Synchronization Fixed
+- **July 09, 2025**: Migration Complete & Active Course Count Synchronization Fixed
   - **Migration Successfully Completed**: All checklist items finished, project running smoothly in Replit environment
-  - **Course/Test Count Synchronization**: Fixed inconsistency between course and test counts on statistics pages:
+  - **Active Course Count Synchronization**: Fixed inconsistency between course and test counts across all system statistics:
     - Updated `/api/mongo/user/stats` endpoint to only count active courses with `{ isActive: true }` filter
     - Updated `/api/mongo/platform/stats` endpoint to maintain consistency across all statistics
-    - Both course and test counts now show only active/available content
-    - Fixed discrepancy where 5 courses were shown but only 4 tests were available
-  - **All Systems Operational**: Authentication, course management, admin features working properly with synchronized statistics
+    - Updated `/api/mongo/admin/stats` endpoint to count only active courses for admin panel
+    - Updated all admin panel UI components to display "Active Courses" instead of "Total Courses"
+    - Fixed discrepancy where course counts included inactive courses while test counts only included active tests
+    - All statistics now consistently show only active/available content across dashboard, courses page, and admin panel
+  - **All Systems Operational**: Authentication, course management, admin features working properly with synchronized active course statistics
 
 - **July 09, 2025**: Migration Complete & Advanced UI Redesign with Ultra-Modern Styling
   - **Migration Successfully Completed**: Project migrated from Replit Agent to Replit environment with all systems operational

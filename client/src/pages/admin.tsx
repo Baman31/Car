@@ -246,7 +246,7 @@ export default function Admin() {
                     <div className="w-2 h-2 bg-blue-400 rounded-full " />
                   </div>
                   <div className="text-2xl font-bold text-white">{adminStats?.totalCourses || 0}</div>
-                  <div className="text-blue-100 text-sm font-medium">Total Courses</div>
+                  <div className="text-blue-100 text-sm font-medium">Active Courses</div>
                 </div>
                 <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 text-center min-w-[120px] border border-white/30 relative">
                   <div className="absolute top-2 right-2">
@@ -484,7 +484,7 @@ export default function Admin() {
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Total Courses</p>
+                        <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Active Courses</p>
                         <p className="text-3xl font-bold text-blue-900 dark:text-blue-100">
                           {adminStats?.totalCourses || 0}
                         </p>
@@ -632,7 +632,7 @@ export default function Admin() {
                           </div>
                           <div className="flex items-center justify-between mt-2">
                             <span className="text-sm text-gray-600 dark:text-gray-400">Active Courses</span>
-                            <span className="font-bold text-gray-900 dark:text-white">{adminStats?.totalCourses || analyticsData.activeCourses}</span>
+                            <span className="font-bold text-gray-900 dark:text-white">{adminStats?.totalCourses || 0}</span>
                           </div>
                           <div className="flex items-center justify-between mt-2">
                             <span className="text-xs text-gray-500 dark:text-gray-500">Live Updates</span>
@@ -860,7 +860,7 @@ export default function Admin() {
                           <div className="flex items-center space-x-2">
                             <BookOpen className="h-4 w-4 text-orange-600" />
                             <span className="text-sm font-bold text-orange-800 dark:text-orange-200">
-                              {(courses as any[])?.length || 0} Total Courses
+                              {(courses as any[])?.length || 0} Active Courses
                             </span>
                           </div>
                         </div>
