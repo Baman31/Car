@@ -46,15 +46,15 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="w-64 bg-blue-900 text-white flex flex-col">
+    <aside className="w-64 bg-blue-900 text-white h-screen flex flex-col">
       {/* Logo */}
-      <div className="p-6 border-b border-blue-800/50">
+      <div className="p-6 border-b border-blue-800/50 flex-shrink-0">
         <div className="flex items-center space-x-3 cursor-pointer group" onClick={() => setLocation('/dashboard')}>
           <div className="relative">
             <div className="w-12 h-12 bg-gradient-to-br from-white to-blue-50 rounded-xl flex items-center justify-center shadow-lg transform transition-all duration-300 group-hover:scale-110 group-hover:rotate-3">
               <GraduationCap className="w-7 h-7 text-blue-900" />
             </div>
-            <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full opacity-90 animate-pulse"></div>
+            <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full opacity-90"></div>
           </div>
           <div className="flex flex-col">
             <span className="font-extrabold text-2xl bg-gradient-to-r from-white via-blue-100 to-blue-200 bg-clip-text text-transparent tracking-wide">
@@ -68,8 +68,8 @@ export default function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-4 py-6">
-        <ul className="space-y-2 mb-8">
+      <nav className="px-4 py-6 flex-shrink-0">
+        <ul className="space-y-2">
           {sidebarItems.map((item, index) => (
             <li key={index}>
               <button 
@@ -88,8 +88,11 @@ export default function Sidebar() {
         </ul>
       </nav>
 
+      {/* Spacer */}
+      <div className="flex-1"></div>
+
       {/* Logout Section */}
-      <div className="p-4">
+      <div className="p-4 flex-shrink-0">
         <Button
           variant="outline"
           className="w-full flex items-center justify-center space-x-2 bg-red-600 hover:bg-red-700 text-white border-red-600 hover:border-red-700"
