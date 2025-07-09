@@ -168,20 +168,20 @@ function TestGradingCard({ test, onGradeDialog, getGradeColor }: TestGradingCard
 
   return (
     <Card className="relative group overflow-hidden border-0 shadow-2xl">
-      {/* Animated Background Glow */}
-      <div className="absolute -inset-1 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-2xl blur-xl opacity-20 group-hover:opacity-30 transition-opacity duration-500 animate-pulse"></div>
+      {/* Background Glow */}
+      <div className="absolute -inset-1 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-2xl blur-xl opacity-20 group-hover:opacity-30 transition-opacity duration-500"></div>
       
       {/* Main Card Container */}
       <div className="relative bg-gradient-to-br from-white/95 via-blue-50/90 to-indigo-50/80 dark:from-gray-900/95 dark:via-blue-900/30 dark:to-indigo-900/20 backdrop-blur-xl rounded-xl border border-white/20 dark:border-gray-700/30">
         <CardHeader className="relative">
           {/* Decorative Top Border */}
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-t-xl">
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
           </div>
           
           {/* Floating Decorative Elements */}
-          <div className="absolute top-3 right-6 w-6 h-6 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-sm animate-pulse"></div>
-          <div className="absolute bottom-3 left-6 w-4 h-4 bg-gradient-to-br from-pink-400/20 to-rose-400/20 rounded-full blur-sm animate-pulse delay-500"></div>
+          <div className="absolute top-3 right-6 w-6 h-6 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-sm"></div>
+          <div className="absolute bottom-3 left-6 w-4 h-4 bg-gradient-to-br from-pink-400/20 to-rose-400/20 rounded-full blur-sm"></div>
           
           <div className="flex justify-between items-start pt-4">
             <div className="flex-1 space-y-4">
@@ -214,7 +214,7 @@ function TestGradingCard({ test, onGradeDialog, getGradeColor }: TestGradingCard
                 <div className="mt-4 space-y-3">
                   <div className="flex items-center space-x-4">
                     <div className="flex items-center space-x-2 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 px-4 py-2 rounded-lg border border-blue-200/50 dark:border-blue-800/50 backdrop-blur-sm">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                       <span className="text-blue-800 dark:text-blue-200 font-semibold text-sm">{test.course?.title}</span>
                     </div>
                     <div className="flex items-center space-x-2 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 px-4 py-2 rounded-lg border border-purple-200/50 dark:border-purple-800/50 backdrop-blur-sm">
@@ -228,11 +228,11 @@ function TestGradingCard({ test, onGradeDialog, getGradeColor }: TestGradingCard
                   {/* Enhanced Status Indicators */}
                   <div className="flex items-center space-x-4">
                     <div className="flex items-center space-x-2 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 px-3 py-2 rounded-lg border border-green-200/50 dark:border-green-800/50">
-                      <Activity className="w-4 h-4 text-green-600 animate-pulse" />
+                      <Activity className="w-4 h-4 text-green-600" />
                       <span className="text-green-800 dark:text-green-200 text-sm font-medium">Live Data</span>
                     </div>
                     <div className="flex items-center space-x-2 bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 px-3 py-2 rounded-lg border border-orange-200/50 dark:border-orange-800/50">
-                      <div className="w-3 h-3 bg-gradient-to-r from-orange-500 to-red-500 rounded-full animate-pulse"></div>
+                      <div className="w-3 h-3 bg-gradient-to-r from-orange-500 to-red-500 rounded-full"></div>
                       <span className="text-orange-800 dark:text-orange-200 text-sm font-medium">Auto-refresh</span>
                     </div>
                   </div>
@@ -443,7 +443,7 @@ export default function StudentGrades() {
               </div>
               <div className="flex flex-wrap gap-3">
                 <div className="flex items-center space-x-2 bg-green-50 dark:bg-green-900/20 px-4 py-2 rounded-xl border border-green-200 dark:border-green-800">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                  <div className="w-2 h-2 bg-green-500 rounded-full" />
                   <span className="text-green-800 dark:text-green-200 text-sm font-medium">Live Updates</span>
                 </div>
                 <div className="flex items-center space-x-2 bg-purple-50 dark:bg-purple-900/20 px-4 py-2 rounded-xl border border-purple-200 dark:border-purple-800">
