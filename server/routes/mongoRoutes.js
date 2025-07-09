@@ -1291,6 +1291,13 @@ router.get('/admin/stats', async (req, res) => {
     const uniqueStudentIds = new Set(enrollments.map(e => e.student._id.toString()));
     const uniqueStudentsEnrolled = uniqueStudentIds.size;
     
+    // Calculate approved students who are enrolled in at least one course
+    const approvedEnrolledStudents = await User.countDocuments({
+      role: 'student',
+      isApproved: true,
+      _id: { $in: Array.from(uniqueStudentIds) }
+    });
+    
     // Calculate average completion rate
     let totalProgress = 0;
     let enrollmentCount = 0;
@@ -1329,6 +1336,7 @@ router.get('/admin/stats', async (req, res) => {
       totalStudents: totalStudents,
       studentsEnrolled: totalEnrollments,
       uniqueStudentsEnrolled: uniqueStudentsEnrolled,
+      approvedEnrolledStudents: approvedEnrolledStudents,
       averageScore,
       averageCompletion,
       courseCompletionRate,
