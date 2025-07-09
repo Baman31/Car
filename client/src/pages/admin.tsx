@@ -245,7 +245,7 @@ export default function Admin() {
                   <div className="absolute top-2 right-2">
                     <div className="w-2 h-2 bg-blue-400 rounded-full " />
                   </div>
-                  <div className="text-2xl font-bold text-white">{adminStats?.totalCourses || 0}</div>
+                  <div className="text-2xl font-bold text-white">{adminStats?.activeCourses || 0}</div>
                   <div className="text-blue-100 text-sm font-medium">Active Courses</div>
                 </div>
                 <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 text-center min-w-[120px] border border-white/30 relative">
@@ -486,7 +486,7 @@ export default function Admin() {
                       <div>
                         <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Active Courses</p>
                         <p className="text-3xl font-bold text-blue-900 dark:text-blue-100">
-                          {adminStats?.totalCourses || 0}
+                          {adminStats?.activeCourses || 0}
                         </p>
                         
                       </div>
@@ -632,7 +632,7 @@ export default function Admin() {
                           </div>
                           <div className="flex items-center justify-between mt-2">
                             <span className="text-sm text-gray-600 dark:text-gray-400">Active Courses</span>
-                            <span className="font-bold text-gray-900 dark:text-white">{adminStats?.totalCourses || 0}</span>
+                            <span className="font-bold text-gray-900 dark:text-white">{adminStats?.activeCourses || 0}</span>
                           </div>
                           <div className="flex items-center justify-between mt-2">
                             <span className="text-xs text-gray-500 dark:text-gray-500">Live Updates</span>
