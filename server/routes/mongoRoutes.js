@@ -1494,6 +1494,8 @@ router.post('/courses/:courseId/modules/:moduleId/complete', verifyToken, async 
   try {
     const { courseId, moduleId } = req.params;
     const userId = req.user.id;
+    
+    console.log('Module completion request:', { courseId, moduleId, userId });
 
     // Find the course and module
     const course = await Course.findById(courseId);
@@ -1512,7 +1514,17 @@ router.post('/courses/:courseId/modules/:moduleId/complete', verifyToken, async 
       course: courseId
     });
     
-    if (!enrollment) {
+    // Also check if user is approved for this course (legacy enrollment system)
+    const user = await User.findById(userId);
+    const isApprovedForCourse = user && user.enrolledCourses && user.enrolledCourses.includes(courseId);
+    
+    console.log('Enrollment check:', { 
+      hasEnrollment: !!enrollment, 
+      isApprovedForCourse, 
+      userEnrolledCourses: user?.enrolledCourses || [] 
+    });
+    
+    if (!enrollment && !isApprovedForCourse) {
       return res.status(403).json({ message: 'Not enrolled in this course' });
     }
 
@@ -1531,22 +1543,38 @@ router.post('/courses/:courseId/modules/:moduleId/complete', verifyToken, async 
       completedAt: new Date()
     });
 
+    // Create enrollment if it doesn't exist but user is approved
+    let currentEnrollment = enrollment;
+    if (!currentEnrollment && isApprovedForCourse) {
+      currentEnrollment = new Enrollment({
+        student: userId,
+        course: courseId,
+        enrolledAt: new Date(),
+        progress: 0,
+        completedModules: []
+      });
+    }
+
     // Add module to enrollment's completed modules if not already there
-    if (!enrollment.completedModules.includes(moduleId)) {
-      enrollment.completedModules.push(moduleId);
+    if (currentEnrollment && !currentEnrollment.completedModules.includes(moduleId)) {
+      currentEnrollment.completedModules.push(moduleId);
     }
 
     // Update enrollment progress
     const totalModules = course.modules.length;
-    const completedModules = enrollment.completedModules.length;
-    enrollment.progress = Math.round((completedModules / totalModules) * 100);
+    const completedModules = currentEnrollment ? currentEnrollment.completedModules.length : 0;
+    if (currentEnrollment) {
+      currentEnrollment.progress = Math.round((completedModules / totalModules) * 100);
+    }
 
     await course.save();
-    await enrollment.save();
+    if (currentEnrollment) {
+      await currentEnrollment.save();
+    }
 
     res.json({ 
       message: 'Module marked as completed',
-      progress: enrollment.progress,
+      progress: currentEnrollment ? currentEnrollment.progress : 0,
       isCompleted: true
     });
 
@@ -1578,7 +1606,11 @@ router.delete('/courses/:courseId/modules/:moduleId/complete', verifyToken, asyn
       course: courseId
     });
     
-    if (!enrollment) {
+    // Also check if user is approved for this course (legacy enrollment system)
+    const user = await User.findById(userId);
+    const isApprovedForCourse = user && user.enrolledCourses && user.enrolledCourses.includes(courseId);
+    
+    if (!enrollment && !isApprovedForCourse) {
       return res.status(403).json({ message: 'Not enrolled in this course' });
     }
 
@@ -1587,22 +1619,38 @@ router.delete('/courses/:courseId/modules/:moduleId/complete', verifyToken, asyn
       completion.userId.toString() !== userId
     );
 
-    // Remove module from enrollment's completed modules
-    enrollment.completedModules = enrollment.completedModules.filter(
-      id => id.toString() !== moduleId
-    );
+    // Use existing enrollment or create one if user is approved
+    let currentEnrollment = enrollment;
+    if (!currentEnrollment && isApprovedForCourse) {
+      currentEnrollment = new Enrollment({
+        student: userId,
+        course: courseId,
+        enrolledAt: new Date(),
+        progress: 0,
+        completedModules: []
+      });
+    }
 
-    // Update enrollment progress
-    const totalModules = course.modules.length;
-    const completedModules = enrollment.completedModules.length;
-    enrollment.progress = Math.round((completedModules / totalModules) * 100);
+    // Remove module from enrollment's completed modules
+    if (currentEnrollment) {
+      currentEnrollment.completedModules = currentEnrollment.completedModules.filter(
+        id => id.toString() !== moduleId
+      );
+
+      // Update enrollment progress
+      const totalModules = course.modules.length;
+      const completedModules = currentEnrollment.completedModules.length;
+      currentEnrollment.progress = Math.round((completedModules / totalModules) * 100);
+    }
 
     await course.save();
-    await enrollment.save();
+    if (currentEnrollment) {
+      await currentEnrollment.save();
+    }
 
     res.json({ 
       message: 'Module completion removed',
-      progress: enrollment.progress,
+      progress: currentEnrollment ? currentEnrollment.progress : 0,
       isCompleted: false
     });
 
