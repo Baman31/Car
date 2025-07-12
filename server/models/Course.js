@@ -22,8 +22,9 @@ const courseModuleSchema = new mongoose.Schema({
   },
   duration: {
     type: Number,
-    required: true,
-    min: 1
+    required: false,
+    min: 1,
+    default: 10
   },
   orderIndex: {
     type: Number,
@@ -91,9 +92,9 @@ const courseSchema = new mongoose.Schema({
     required: true,
     validate: {
       validator: function(v) {
-        return /^https?:\/\/.+\.(jpg|jpeg|png|gif|webp)$/i.test(v) || /^https?:\/\/.+/.test(v);
+        return /^https?:\/\/.+/.test(v);
       },
-      message: 'Please provide a valid image URL'
+      message: 'Please provide a valid URL'
     }
   },
   instructor: {

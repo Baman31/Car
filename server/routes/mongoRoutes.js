@@ -371,6 +371,7 @@ router.post('/courses', verifyToken, requireAdmin, async (req, res) => {
     
     res.status(201).json(course);
   } catch (error) {
+    console.error('Course creation error:', error);
     res.status(400).json({ message: 'Failed to create course', error: error.message });
   }
 });
