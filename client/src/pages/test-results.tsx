@@ -128,7 +128,10 @@ export default function TestResults() {
   // Total students enrolled in the selected course (or all courses)
   const totalStudentsInCourse = isAdmin && filteredTestResults ? filteredTestResults.length : 0;
   
-  // Course-specific student enrollment count for the statistics card
+  // Total students enrolled in courses (always shows system-wide count)
+  const totalStudentsEnrolled = isAdmin ? (adminStats?.studentsEnrolled || 0) : 0;
+  
+  // Course-specific student count for completion rate calculation
   const courseSpecificStudentCount = isAdmin ? (
     selectedCourse === "all" 
       ? adminStats?.studentsEnrolled || 0
@@ -330,10 +333,10 @@ export default function TestResults() {
                               Total Students Enrolled
                             </p>
                             <p className="text-lg font-bold text-blue-900 dark:text-blue-100 font-mono">
-                              {courseSpecificStudentCount}
+                              {totalStudentsEnrolled}
                             </p>
                             <p className="text-xs text-blue-500 dark:text-blue-300 mt-1">
-                              {selectedCourse === "all" ? "All courses combined" : `In ${selectedCourse} course`}
+                              Total students enrolled in courses
                             </p>
                           </div>
                         </div>
