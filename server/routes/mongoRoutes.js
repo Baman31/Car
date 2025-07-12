@@ -340,6 +340,8 @@ router.get('/courses/:id', verifyToken, async (req, res) => {
 // Admin: Create course with modules and notes
 router.post('/courses', verifyToken, requireAdmin, async (req, res) => {
   try {
+    console.log('Course creation request body:', req.body);
+    
     const {
       title,
       description,
@@ -353,6 +355,13 @@ router.post('/courses', verifyToken, requireAdmin, async (req, res) => {
 
     // Use admin user ID for instructor
     const adminUser = await User.findOne({ role: 'admin' });
+    console.log('Admin user found:', adminUser ? 'Yes' : 'No');
+    
+    if (!adminUser) {
+      return res.status(400).json({ message: 'No admin user found' });
+    }
+    
+    console.log('Creating course with modules:', modules);
     
     const course = new Course({
       title,
@@ -366,12 +375,16 @@ router.post('/courses', verifyToken, requireAdmin, async (req, res) => {
       notes: notes || []
     });
 
+    console.log('Course object created, attempting to save...');
     await course.save();
+    console.log('Course saved successfully');
+    
     await course.populate('instructor', 'firstName lastName');
     
     res.status(201).json(course);
   } catch (error) {
     console.error('Course creation error:', error);
+    console.error('Error details:', error.errors);
     res.status(400).json({ message: 'Failed to create course', error: error.message });
   }
 });
