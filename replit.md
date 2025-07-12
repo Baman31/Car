@@ -125,6 +125,24 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+- **July 12, 2025**: Student Dashboard Course/Test Filtering Fixed & Module Completion Issues Resolved
+  - **Student Dashboard Course Filtering Fixed**: Updated `/api/mongo/user/stats` endpoint to show only enrolled courses for students:
+    - Students now see count of their enrolled courses instead of all courses in system
+    - Students now see count of tests available in their enrolled courses only
+    - Admin users continue to see all courses and tests for platform management
+    - Average score calculation updated to only include tests from student's enrolled courses
+  - **Module Completion Fixed**: Enhanced module completion functionality for students:
+    - Fixed enrollment verification to work with both new Enrollment documents and legacy approved courses
+    - Added debugging logs to track completion requests and enrollment status
+    - Students can now successfully mark video modules as complete in their courses
+    - Progress tracking now works properly for course completion percentages
+  - **Test Grading Interface Fixed**: Resolved UI issues with student grading:
+    - Fixed "Add Grade" button clickability by removing pointer event conflicts
+    - Fixed horizontal scroll functionality for tables on smaller screens
+    - Enhanced table layout with proper spacing and responsive design
+    - Progress bar now updates correctly showing completion percentage (e.g., 25% when 1/4 students graded)
+  - **All Systems Operational**: Course management, test grading, and student progress tracking working properly
+
 - **July 12, 2025**: Migration Complete & Course-Specific Student Enrollment Filtering Fixed
   - **Migration Successfully Completed**: All checklist items finished, project running smoothly in Replit environment
   - **Course-Specific Student Enrollment Count**: Fixed test results page to show accurate student counts based on selected course filter:

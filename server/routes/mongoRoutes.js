@@ -599,11 +599,27 @@ router.get('/user/stats', verifyToken, async (req, res) => {
     const userId = req.user.id;
     const userRole = req.user.role;
     
-    // Get total active courses available
-    const totalCourses = await Course.countDocuments({ isActive: true });
+    let totalCourses, availableTests;
     
-    // Get total available tests
-    const availableTests = await Test.countDocuments({ isActive: true });
+    if (userRole === 'admin') {
+      // For admin: show all active courses and tests
+      totalCourses = await Course.countDocuments({ isActive: true });
+      availableTests = await Test.countDocuments({ isActive: true });
+    } else {
+      // For students: show only their enrolled courses and tests
+      const user = await User.findById(userId);
+      const enrolledCourseIds = user.enrolledCourses || [];
+      
+      totalCourses = await Course.countDocuments({ 
+        _id: { $in: enrolledCourseIds }, 
+        isActive: true 
+      });
+      
+      availableTests = await Test.countDocuments({ 
+        course: { $in: enrolledCourseIds }, 
+        isActive: true 
+      });
+    }
     
     let averageScore = 0;
     
@@ -676,7 +692,14 @@ router.get('/user/stats', verifyToken, async (req, res) => {
       });
     } else {
       // For students: show their personal average score using same calculation as test results page
-      const tests = await Test.find({ isActive: true });
+      const user = await User.findById(userId);
+      const enrolledCourseIds = user.enrolledCourses || [];
+      
+      const tests = await Test.find({ 
+        course: { $in: enrolledCourseIds }, 
+        isActive: true 
+      });
+      
       const userScores = [];
       
       tests.forEach(test => {
