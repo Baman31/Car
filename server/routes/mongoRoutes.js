@@ -610,15 +610,28 @@ router.get('/user/stats', verifyToken, async (req, res) => {
       const user = await User.findById(userId);
       const enrolledCourseIds = user.enrolledCourses || [];
       
-      totalCourses = await Course.countDocuments({ 
-        _id: { $in: enrolledCourseIds }, 
-        isActive: true 
+      console.log('Student stats check:', {
+        userId,
+        userName: `${user.firstName} ${user.lastName}`,
+        enrolledCourses: enrolledCourseIds,
+        enrolledCoursesCount: enrolledCourseIds.length
       });
       
-      availableTests = await Test.countDocuments({ 
-        course: { $in: enrolledCourseIds }, 
-        isActive: true 
-      });
+      if (enrolledCourseIds.length === 0) {
+        // Student has no enrolled courses
+        totalCourses = 0;
+        availableTests = 0;
+      } else {
+        totalCourses = await Course.countDocuments({ 
+          _id: { $in: enrolledCourseIds }, 
+          isActive: true 
+        });
+        
+        availableTests = await Test.countDocuments({ 
+          course: { $in: enrolledCourseIds }, 
+          isActive: true 
+        });
+      }
     }
     
     let averageScore = 0;
