@@ -1562,36 +1562,40 @@ router.put('/admin/users/:id/suspend-all', verifyToken, requireAdmin, async (req
     user.enrolledCourses = [];
     await user.save();
     
-    // Clean up all associated data
-    if (allEnrolledCourses.length > 0) {
-      // 1. Remove all test results for this user
-      const tests = await Test.find({ course: { $in: allEnrolledCourses } });
-      for (const test of tests) {
-        test.results = test.results.filter(
-          result => result.student.toString() !== id
-        );
-        await test.save();
-      }
-      
-      // 2. Remove all enrollments for this user
-      await Enrollment.deleteMany({ student: id });
-      
-      // 3. Remove all module completions for this user
-      await Course.updateMany(
-        { _id: { $in: allEnrolledCourses } },
-        { 
-          $pull: { 
-            'modules.$[].completedBy': { userId: id } 
-          } 
-        }
+    // Clean up all associated data (regardless of enrolled courses)
+    // 1. Remove ALL test results for this user from any test
+    const allTests = await Test.find({});
+    let testsUpdated = 0;
+    for (const test of allTests) {
+      const originalLength = test.results.length;
+      test.results = test.results.filter(
+        result => result.student.toString() !== id
       );
-      
-      console.log('Completely cleaned up user data:', {
-        testsProcessed: tests.length,
-        coursesProcessed: allEnrolledCourses.length,
-        enrollmentsRemoved: await Enrollment.countDocuments({ student: id })
-      });
+      if (test.results.length < originalLength) {
+        await test.save();
+        testsUpdated++;
+      }
     }
+    
+    // 2. Remove all enrollments for this user
+    const enrollmentsRemoved = await Enrollment.deleteMany({ student: id });
+    
+    // 3. Remove all module completions for this user from any course
+    const coursesUpdated = await Course.updateMany(
+      {},
+      { 
+        $pull: { 
+          'modules.$[].completedBy': { userId: id } 
+        } 
+      }
+    );
+    
+    console.log('Completely cleaned up user data:', {
+      testsUpdated,
+      enrollmentsRemoved: enrollmentsRemoved.deletedCount,
+      coursesUpdated: coursesUpdated.modifiedCount,
+      originalEnrolledCourses: allEnrolledCourses.length
+    });
     
     const updatedUser = await User.findById(id).select('-password');
     
