@@ -128,6 +128,13 @@ export default function TestResults() {
   // Total students enrolled in the selected course (or all courses)
   const totalStudentsInCourse = isAdmin && filteredTestResults ? filteredTestResults.length : 0;
   
+  // Course-specific student enrollment count for the statistics card
+  const courseSpecificStudentCount = isAdmin ? (
+    selectedCourse === "all" 
+      ? adminStats?.studentsEnrolled || 0
+      : filteredTestResults?.length || 0
+  ) : 0;
+  
   // Average score across all completed tests in selected course
   const averageScore = (() => {
     if (isAdmin && filteredTestResults) {
@@ -323,10 +330,10 @@ export default function TestResults() {
                               Total Students Enrolled
                             </p>
                             <p className="text-lg font-bold text-blue-900 dark:text-blue-100 font-mono">
-                              {adminStats?.studentsEnrolled || 0}
+                              {courseSpecificStudentCount}
                             </p>
                             <p className="text-xs text-blue-500 dark:text-blue-300 mt-1">
-                              All courses combined
+                              {selectedCourse === "all" ? "All courses combined" : `In ${selectedCourse} course`}
                             </p>
                           </div>
                         </div>
