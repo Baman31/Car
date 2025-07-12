@@ -1482,6 +1482,12 @@ router.put('/admin/users/:id/suspend', verifyToken, requireAdmin, async (req, re
       return res.status(404).json({ message: 'User not found' });
     }
     
+    console.log('Suspending user from courses:', { 
+      userId: id, 
+      username: user.username,
+      coursesToRemove 
+    });
+    
     // Remove specified courses from user's enrolled courses
     user.enrolledCourses = user.enrolledCourses.filter(
       courseId => !coursesToRemove.includes(courseId.toString())
@@ -1489,14 +1495,113 @@ router.put('/admin/users/:id/suspend', verifyToken, requireAdmin, async (req, re
     
     await user.save();
     
+    // Clean up associated data for suspended courses
+    if (coursesToRemove && coursesToRemove.length > 0) {
+      // 1. Remove test results for suspended courses
+      const tests = await Test.find({ course: { $in: coursesToRemove } });
+      for (const test of tests) {
+        test.results = test.results.filter(
+          result => result.student.toString() !== id
+        );
+        await test.save();
+      }
+      
+      // 2. Remove enrollments for suspended courses
+      await Enrollment.deleteMany({
+        student: id,
+        course: { $in: coursesToRemove }
+      });
+      
+      // 3. Remove module completions for suspended courses
+      await Course.updateMany(
+        { _id: { $in: coursesToRemove } },
+        { 
+          $pull: { 
+            'modules.$[].completedBy': { userId: id } 
+          } 
+        }
+      );
+      
+      console.log('Cleaned up data for suspended courses:', {
+        testsProcessed: tests.length,
+        coursesProcessed: coursesToRemove.length
+      });
+    }
+    
     const updatedUser = await User.findById(id).select('-password').populate('enrolledCourses');
     
     res.json({ 
-      message: 'User suspended from selected courses successfully',
+      message: 'User suspended from selected courses successfully. All associated data has been cleaned up.',
       user: updatedUser 
     });
   } catch (error) {
+    console.error('Error suspending user:', error);
     res.status(500).json({ message: 'Failed to suspend user', error: error.message });
+  }
+});
+
+// Complete user suspension (remove from all courses and clean up all data)
+router.put('/admin/users/:id/suspend-all', verifyToken, requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    console.log('Completely suspending user:', { 
+      userId: id, 
+      username: user.username,
+      currentEnrolledCourses: user.enrolledCourses 
+    });
+    
+    const allEnrolledCourses = user.enrolledCourses || [];
+    
+    // Remove all courses from user's enrolled courses
+    user.enrolledCourses = [];
+    await user.save();
+    
+    // Clean up all associated data
+    if (allEnrolledCourses.length > 0) {
+      // 1. Remove all test results for this user
+      const tests = await Test.find({ course: { $in: allEnrolledCourses } });
+      for (const test of tests) {
+        test.results = test.results.filter(
+          result => result.student.toString() !== id
+        );
+        await test.save();
+      }
+      
+      // 2. Remove all enrollments for this user
+      await Enrollment.deleteMany({ student: id });
+      
+      // 3. Remove all module completions for this user
+      await Course.updateMany(
+        { _id: { $in: allEnrolledCourses } },
+        { 
+          $pull: { 
+            'modules.$[].completedBy': { userId: id } 
+          } 
+        }
+      );
+      
+      console.log('Completely cleaned up user data:', {
+        testsProcessed: tests.length,
+        coursesProcessed: allEnrolledCourses.length,
+        enrollmentsRemoved: await Enrollment.countDocuments({ student: id })
+      });
+    }
+    
+    const updatedUser = await User.findById(id).select('-password');
+    
+    res.json({ 
+      message: 'User completely suspended. All course data, test results, and progress have been removed.',
+      user: updatedUser 
+    });
+  } catch (error) {
+    console.error('Error completely suspending user:', error);
+    res.status(500).json({ message: 'Failed to suspend user completely', error: error.message });
   }
 });
 
