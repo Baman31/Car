@@ -169,11 +169,11 @@ function TestGradingCard({ test, onGradeDialog, getGradeColor }: TestGradingCard
   return (
     <Card className="relative group overflow-hidden border-0 shadow-2xl">
       {/* Background Glow */}
-      <div className="absolute -inset-1 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-2xl blur-xl opacity-20 group-hover:opacity-30 transition-opacity duration-500"></div>
+      <div className="absolute -inset-1 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-2xl blur-xl opacity-20 group-hover:opacity-30 transition-opacity duration-500 pointer-events-none"></div>
       
       {/* Main Card Container */}
       <div className="relative bg-gradient-to-br from-white/95 via-blue-50/90 to-indigo-50/80 dark:from-gray-900/95 dark:via-blue-900/30 dark:to-indigo-900/20 backdrop-blur-xl rounded-xl border border-white/20 dark:border-gray-700/30">
-        <CardHeader className="relative">
+        <CardHeader className="relative pointer-events-auto">
           {/* Decorative Top Border */}
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-t-xl">
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
@@ -272,17 +272,17 @@ function TestGradingCard({ test, onGradeDialog, getGradeColor }: TestGradingCard
           </div>
         </CardHeader>
       </div>
-      <CardContent>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+      <CardContent className="pointer-events-auto">
+        <div className="overflow-x-auto max-w-full">
+          <table className="w-full text-sm min-w-[800px]">
             <thead>
               <tr className="border-b">
-                <th className="text-left py-2">Student</th>
-                <th className="text-left py-2">Email</th>
-                <th className="text-center py-2">Score</th>
-                <th className="text-center py-2">Grade</th>
-                <th className="text-center py-2">Date Completed</th>
-                <th className="text-center py-2">Action</th>
+                <th className="text-left py-2 px-2 whitespace-nowrap">Student</th>
+                <th className="text-left py-2 px-2 whitespace-nowrap">Email</th>
+                <th className="text-center py-2 px-2 whitespace-nowrap">Score</th>
+                <th className="text-center py-2 px-2 whitespace-nowrap">Grade</th>
+                <th className="text-center py-2 px-2 whitespace-nowrap">Date Completed</th>
+                <th className="text-center py-2 px-2 whitespace-nowrap">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -292,12 +292,12 @@ function TestGradingCard({ test, onGradeDialog, getGradeColor }: TestGradingCard
                 );
                 
                 return (
-                  <tr key={student._id} className="border-b">
-                    <td className="py-2 font-medium">
+                  <tr key={student._id} className="border-b hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                    <td className="py-3 px-2 font-medium whitespace-nowrap">
                       {student.firstName} {student.lastName}
                     </td>
-                    <td className="py-2 text-gray-600">{student.email}</td>
-                    <td className="py-2 text-center">
+                    <td className="py-3 px-2 text-gray-600 whitespace-nowrap">{student.email}</td>
+                    <td className="py-3 px-2 text-center whitespace-nowrap">
                       {result ? (
                         <span className="font-semibold">
                           {result.score}/{result.maxScore || test.maxScore || 100}
@@ -306,7 +306,7 @@ function TestGradingCard({ test, onGradeDialog, getGradeColor }: TestGradingCard
                         <span className="text-gray-400">Not graded</span>
                       )}
                     </td>
-                    <td className="py-2 text-center">
+                    <td className="py-3 px-2 text-center whitespace-nowrap">
                       {result ? (
                         <Badge className={getGradeColor(result.grade)}>
                           {result.grade}
@@ -315,18 +315,19 @@ function TestGradingCard({ test, onGradeDialog, getGradeColor }: TestGradingCard
                         <span className="text-gray-400">-</span>
                       )}
                     </td>
-                    <td className="py-2 text-center text-gray-600">
+                    <td className="py-3 px-2 text-center text-gray-600 whitespace-nowrap">
                       {result ? (
                         new Date(result.completedAt).toLocaleDateString()
                       ) : (
                         <span className="text-gray-400">-</span>
                       )}
                     </td>
-                    <td className="py-2 text-center">
+                    <td className="py-3 px-2 text-center whitespace-nowrap">
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => onGradeDialog(student, test, result)}
+                        className="relative z-10 hover:bg-blue-50 hover:border-blue-300 transition-all duration-200"
                       >
                         {result ? (
                           <>
