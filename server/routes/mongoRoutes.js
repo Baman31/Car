@@ -340,6 +340,8 @@ router.get('/courses/:id', verifyToken, async (req, res) => {
 // Admin: Create course with modules and notes
 router.post('/courses', verifyToken, requireAdmin, async (req, res) => {
   try {
+    console.log('Course creation request body:', req.body);
+    
     const {
       title,
       description,
@@ -353,6 +355,13 @@ router.post('/courses', verifyToken, requireAdmin, async (req, res) => {
 
     // Use admin user ID for instructor
     const adminUser = await User.findOne({ role: 'admin' });
+    console.log('Admin user found:', adminUser ? 'Yes' : 'No');
+    
+    if (!adminUser) {
+      return res.status(400).json({ message: 'No admin user found' });
+    }
+    
+    console.log('Creating course with modules:', modules);
     
     const course = new Course({
       title,
@@ -366,11 +375,16 @@ router.post('/courses', verifyToken, requireAdmin, async (req, res) => {
       notes: notes || []
     });
 
+    console.log('Course object created, attempting to save...');
     await course.save();
+    console.log('Course saved successfully');
+    
     await course.populate('instructor', 'firstName lastName');
     
     res.status(201).json(course);
   } catch (error) {
+    console.error('Course creation error:', error);
+    console.error('Error details:', error.errors);
     res.status(400).json({ message: 'Failed to create course', error: error.message });
   }
 });
@@ -585,11 +599,40 @@ router.get('/user/stats', verifyToken, async (req, res) => {
     const userId = req.user.id;
     const userRole = req.user.role;
     
-    // Get total active courses available
-    const totalCourses = await Course.countDocuments({ isActive: true });
+    let totalCourses, availableTests;
     
-    // Get total available tests
-    const availableTests = await Test.countDocuments({ isActive: true });
+    if (userRole === 'admin') {
+      // For admin: show all active courses and tests
+      totalCourses = await Course.countDocuments({ isActive: true });
+      availableTests = await Test.countDocuments({ isActive: true });
+    } else {
+      // For students: show only their enrolled courses and tests
+      const user = await User.findById(userId);
+      const enrolledCourseIds = user.enrolledCourses || [];
+      
+      console.log('Student stats check:', {
+        userId,
+        userName: `${user.firstName} ${user.lastName}`,
+        enrolledCourses: enrolledCourseIds,
+        enrolledCoursesCount: enrolledCourseIds.length
+      });
+      
+      if (enrolledCourseIds.length === 0) {
+        // Student has no enrolled courses
+        totalCourses = 0;
+        availableTests = 0;
+      } else {
+        totalCourses = await Course.countDocuments({ 
+          _id: { $in: enrolledCourseIds }, 
+          isActive: true 
+        });
+        
+        availableTests = await Test.countDocuments({ 
+          course: { $in: enrolledCourseIds }, 
+          isActive: true 
+        });
+      }
+    }
     
     let averageScore = 0;
     
@@ -662,7 +705,14 @@ router.get('/user/stats', verifyToken, async (req, res) => {
       });
     } else {
       // For students: show their personal average score using same calculation as test results page
-      const tests = await Test.find({ isActive: true });
+      const user = await User.findById(userId);
+      const enrolledCourseIds = user.enrolledCourses || [];
+      
+      const tests = await Test.find({ 
+        course: { $in: enrolledCourseIds }, 
+        isActive: true 
+      });
+      
       const userScores = [];
       
       tests.forEach(test => {
@@ -1432,6 +1482,12 @@ router.put('/admin/users/:id/suspend', verifyToken, requireAdmin, async (req, re
       return res.status(404).json({ message: 'User not found' });
     }
     
+    console.log('Suspending user from courses:', { 
+      userId: id, 
+      username: user.username,
+      coursesToRemove 
+    });
+    
     // Remove specified courses from user's enrolled courses
     user.enrolledCourses = user.enrolledCourses.filter(
       courseId => !coursesToRemove.includes(courseId.toString())
@@ -1439,14 +1495,117 @@ router.put('/admin/users/:id/suspend', verifyToken, requireAdmin, async (req, re
     
     await user.save();
     
+    // Clean up associated data for suspended courses
+    if (coursesToRemove && coursesToRemove.length > 0) {
+      // 1. Remove test results for suspended courses
+      const tests = await Test.find({ course: { $in: coursesToRemove } });
+      for (const test of tests) {
+        test.results = test.results.filter(
+          result => result.student.toString() !== id
+        );
+        await test.save();
+      }
+      
+      // 2. Remove enrollments for suspended courses
+      await Enrollment.deleteMany({
+        student: id,
+        course: { $in: coursesToRemove }
+      });
+      
+      // 3. Remove module completions for suspended courses
+      await Course.updateMany(
+        { _id: { $in: coursesToRemove } },
+        { 
+          $pull: { 
+            'modules.$[].completedBy': { userId: id } 
+          } 
+        }
+      );
+      
+      console.log('Cleaned up data for suspended courses:', {
+        testsProcessed: tests.length,
+        coursesProcessed: coursesToRemove.length
+      });
+    }
+    
     const updatedUser = await User.findById(id).select('-password').populate('enrolledCourses');
     
     res.json({ 
-      message: 'User suspended from selected courses successfully',
+      message: 'User suspended from selected courses successfully. All associated data has been cleaned up.',
       user: updatedUser 
     });
   } catch (error) {
+    console.error('Error suspending user:', error);
     res.status(500).json({ message: 'Failed to suspend user', error: error.message });
+  }
+});
+
+// Complete user suspension (remove from all courses and clean up all data)
+router.put('/admin/users/:id/suspend-all', verifyToken, requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    console.log('Completely suspending user:', { 
+      userId: id, 
+      username: user.username,
+      currentEnrolledCourses: user.enrolledCourses 
+    });
+    
+    const allEnrolledCourses = user.enrolledCourses || [];
+    
+    // Remove all courses from user's enrolled courses
+    user.enrolledCourses = [];
+    await user.save();
+    
+    // Clean up all associated data (regardless of enrolled courses)
+    // 1. Remove ALL test results for this user from any test
+    const allTests = await Test.find({});
+    let testsUpdated = 0;
+    for (const test of allTests) {
+      const originalLength = test.results.length;
+      test.results = test.results.filter(
+        result => result.student.toString() !== id
+      );
+      if (test.results.length < originalLength) {
+        await test.save();
+        testsUpdated++;
+      }
+    }
+    
+    // 2. Remove all enrollments for this user
+    const enrollmentsRemoved = await Enrollment.deleteMany({ student: id });
+    
+    // 3. Remove all module completions for this user from any course
+    const coursesUpdated = await Course.updateMany(
+      {},
+      { 
+        $pull: { 
+          'modules.$[].completedBy': { userId: id } 
+        } 
+      }
+    );
+    
+    console.log('Completely cleaned up user data:', {
+      testsUpdated,
+      enrollmentsRemoved: enrollmentsRemoved.deletedCount,
+      coursesUpdated: coursesUpdated.modifiedCount,
+      originalEnrolledCourses: allEnrolledCourses.length
+    });
+    
+    const updatedUser = await User.findById(id).select('-password');
+    
+    res.json({ 
+      message: 'User completely suspended. All course data, test results, and progress have been removed.',
+      user: updatedUser 
+    });
+  } catch (error) {
+    console.error('Error completely suspending user:', error);
+    res.status(500).json({ message: 'Failed to suspend user completely', error: error.message });
   }
 });
 
@@ -1480,6 +1639,8 @@ router.post('/courses/:courseId/modules/:moduleId/complete', verifyToken, async 
   try {
     const { courseId, moduleId } = req.params;
     const userId = req.user.id;
+    
+    console.log('Module completion request:', { courseId, moduleId, userId });
 
     // Find the course and module
     const course = await Course.findById(courseId);
@@ -1498,7 +1659,17 @@ router.post('/courses/:courseId/modules/:moduleId/complete', verifyToken, async 
       course: courseId
     });
     
-    if (!enrollment) {
+    // Also check if user is approved for this course (legacy enrollment system)
+    const user = await User.findById(userId);
+    const isApprovedForCourse = user && user.enrolledCourses && user.enrolledCourses.includes(courseId);
+    
+    console.log('Enrollment check:', { 
+      hasEnrollment: !!enrollment, 
+      isApprovedForCourse, 
+      userEnrolledCourses: user?.enrolledCourses || [] 
+    });
+    
+    if (!enrollment && !isApprovedForCourse) {
       return res.status(403).json({ message: 'Not enrolled in this course' });
     }
 
@@ -1517,22 +1688,38 @@ router.post('/courses/:courseId/modules/:moduleId/complete', verifyToken, async 
       completedAt: new Date()
     });
 
+    // Create enrollment if it doesn't exist but user is approved
+    let currentEnrollment = enrollment;
+    if (!currentEnrollment && isApprovedForCourse) {
+      currentEnrollment = new Enrollment({
+        student: userId,
+        course: courseId,
+        enrolledAt: new Date(),
+        progress: 0,
+        completedModules: []
+      });
+    }
+
     // Add module to enrollment's completed modules if not already there
-    if (!enrollment.completedModules.includes(moduleId)) {
-      enrollment.completedModules.push(moduleId);
+    if (currentEnrollment && !currentEnrollment.completedModules.includes(moduleId)) {
+      currentEnrollment.completedModules.push(moduleId);
     }
 
     // Update enrollment progress
     const totalModules = course.modules.length;
-    const completedModules = enrollment.completedModules.length;
-    enrollment.progress = Math.round((completedModules / totalModules) * 100);
+    const completedModules = currentEnrollment ? currentEnrollment.completedModules.length : 0;
+    if (currentEnrollment) {
+      currentEnrollment.progress = Math.round((completedModules / totalModules) * 100);
+    }
 
     await course.save();
-    await enrollment.save();
+    if (currentEnrollment) {
+      await currentEnrollment.save();
+    }
 
     res.json({ 
       message: 'Module marked as completed',
-      progress: enrollment.progress,
+      progress: currentEnrollment ? currentEnrollment.progress : 0,
       isCompleted: true
     });
 
@@ -1564,7 +1751,11 @@ router.delete('/courses/:courseId/modules/:moduleId/complete', verifyToken, asyn
       course: courseId
     });
     
-    if (!enrollment) {
+    // Also check if user is approved for this course (legacy enrollment system)
+    const user = await User.findById(userId);
+    const isApprovedForCourse = user && user.enrolledCourses && user.enrolledCourses.includes(courseId);
+    
+    if (!enrollment && !isApprovedForCourse) {
       return res.status(403).json({ message: 'Not enrolled in this course' });
     }
 
@@ -1573,22 +1764,38 @@ router.delete('/courses/:courseId/modules/:moduleId/complete', verifyToken, asyn
       completion.userId.toString() !== userId
     );
 
-    // Remove module from enrollment's completed modules
-    enrollment.completedModules = enrollment.completedModules.filter(
-      id => id.toString() !== moduleId
-    );
+    // Use existing enrollment or create one if user is approved
+    let currentEnrollment = enrollment;
+    if (!currentEnrollment && isApprovedForCourse) {
+      currentEnrollment = new Enrollment({
+        student: userId,
+        course: courseId,
+        enrolledAt: new Date(),
+        progress: 0,
+        completedModules: []
+      });
+    }
 
-    // Update enrollment progress
-    const totalModules = course.modules.length;
-    const completedModules = enrollment.completedModules.length;
-    enrollment.progress = Math.round((completedModules / totalModules) * 100);
+    // Remove module from enrollment's completed modules
+    if (currentEnrollment) {
+      currentEnrollment.completedModules = currentEnrollment.completedModules.filter(
+        id => id.toString() !== moduleId
+      );
+
+      // Update enrollment progress
+      const totalModules = course.modules.length;
+      const completedModules = currentEnrollment.completedModules.length;
+      currentEnrollment.progress = Math.round((completedModules / totalModules) * 100);
+    }
 
     await course.save();
-    await enrollment.save();
+    if (currentEnrollment) {
+      await currentEnrollment.save();
+    }
 
     res.json({ 
       message: 'Module completion removed',
-      progress: enrollment.progress,
+      progress: currentEnrollment ? currentEnrollment.progress : 0,
       isCompleted: false
     });
 

@@ -125,8 +125,12 @@ export default function TestResults() {
     ).map((student: any) => student.student._id)
   ).size : (filteredStudentResults?.length || 0) > 0 ? 1 : 0;
   
-  // Total students enrolled in the selected course (or all courses)
-  const totalStudentsInCourse = isAdmin && filteredTestResults ? filteredTestResults.length : 0;
+  // Count students who have taken tests in the selected course
+  const studentsInSelectedCourse = isAdmin ? (
+    selectedCourse === "all" 
+      ? new Set(testResults?.map((student: any) => student.student._id)).size || 0
+      : filteredTestResults?.length || 0
+  ) : 0;
   
   // Average score across all completed tests in selected course
   const averageScore = (() => {
@@ -323,10 +327,10 @@ export default function TestResults() {
                               Total Students Enrolled
                             </p>
                             <p className="text-lg font-bold text-blue-900 dark:text-blue-100 font-mono">
-                              {adminStats?.studentsEnrolled || 0}
+                              {studentsInSelectedCourse}
                             </p>
                             <p className="text-xs text-blue-500 dark:text-blue-300 mt-1">
-                              All courses combined
+                              {selectedCourse === "all" ? "Students in all courses" : `Students in ${selectedCourse}`}
                             </p>
                           </div>
                         </div>
@@ -343,7 +347,7 @@ export default function TestResults() {
                               {studentsCompleted}
                             </p>
                             <p className="text-xs text-green-500 dark:text-green-300 mt-1">
-                              {totalStudentsInCourse > 0 ? `${Math.round((studentsCompleted / totalStudentsInCourse) * 100)}% completion rate` : "No students yet"}
+                              {studentsInSelectedCourse > 0 ? `${Math.round((studentsCompleted / studentsInSelectedCourse) * 100)}% completion rate` : "No students yet"}
                             </p>
                           </div>
                         </div>
